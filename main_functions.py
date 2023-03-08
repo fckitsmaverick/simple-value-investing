@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import time
 import certifi
 import json
-import math, statistics, numpy as np, seaborn as sns
+import math, statistics, numpy as np, seaborn as sns, matplotlib.pyplot as plt
 
 
 try:
@@ -60,6 +60,7 @@ def api_call(symbol):
     global timer_function_start
     timer_function_start = time.perf_counter()
     count = 0
+    symbol = symbol.replace(".", "-")
     for attemps in range(4):
         # check for errors
         try:
@@ -90,11 +91,8 @@ def get_datas(list_of_symbols):
     for symbol in list_of_symbols:
         # make the api calls
         stockQuote, financialRatios, keyMetrics, discountedCashFlow  = api_call(symbol)
-        # retrieve the price and display it
-        current_price = stockQuote[0]["price"]
-        price[symbol] = current_price
-        print(f"Price is {current_price}")
         # retrieve the different datas we are interested in
+        retrieve_datas(stockQuote, "price", symbol, price)
         retrieve_datas(financialRatios, "returnOnEquityTTM", symbol, returnOnEquityTTM, meanReturnOnEquityTTM)
         retrieve_datas(financialRatios, "priceEarningsRatioTTM", symbol, priceEarningsRatioTTM, meanPriceEarningsRatioTTM)
         retrieve_datas(financialRatios, "returnOnCapitalEmployedTTM", symbol, returnOnInvestedCapitalTTM, meanReturnOnInvestedCapitalTTM)
@@ -104,7 +102,7 @@ def get_datas(list_of_symbols):
         retrieve_datas(keyMetrics, "evToFreeCashFlowTTM", symbol, enterpriseValueOverFreeCashFlowTTM)
         counter += 1
         print(f"{counter} ticker(s) retrieved")
-        if counter == 5:
+        if counter == 5000:
             break
         timer_function_end = time.perf_counter()
         print(f"Time elapsed to retrive this ticker : {timer_function_end - timer_function_start}")
@@ -128,13 +126,15 @@ def sorting_nested_dict_values(dic):
 def dic_to_CSV(dic, name):
     current_directory = os.getcwd()
     path = f"{current_directory}/CSV"
+    # orient=index means the keys of the dictionary will be rows, because before this line the dict keys are columns
     df = pd.DataFrame.from_dict(dic, orient="index")
     df.to_csv(f"{path}/{name}.csv", index=True, header=True)
     return
 
 def retrieve_datas(bulk_datas, specific_data, symbol, name_of_the_dict, mean_array = None):
+    symbol = symbol.replace(".", "-") # some stocks have points in it and that stop from retrieving the datas
     if not bulk_datas or bulk_datas[0][f"{specific_data}"] == None:
-        print(f"{specific_data} no found")
+        print(f"{specific_data} not found")
     else:
         name_of_the_dict[symbol] = bulk_datas[0][f"{specific_data}"]
         print(f"Found {specific_data}")
@@ -153,14 +153,14 @@ def data_cleaning(array):
     lower_bound_outlier = q1 - 2.25*(iqr)
     l, r = 0, len(array)-1
     while(True):
-        if array[l] > lower_bound_outlier and array[r] < upper_bound_outlier:
+        if array[l] > lower_bound_outlier and array[len(array)-1] < upper_bound_outlier:
             # stop if all values are in the range
             break
         elif array[l] < lower_bound_outlier:
             # if the value is out of bound remove it and remove one from the other side too to balance it
             array.pop(0)
             array.pop()
-        elif array[r] > upper_bound_outlier:
+        elif array[len(array)-1] > upper_bound_outlier:
             # same for upper bound
             array.pop()
             array.pop(0)
@@ -172,6 +172,28 @@ def calculate_means(dict_datas_of_symbols):
     # the argument passed is a dict with the corresponding key and data for example dict["roeMean"] contain an array with all the roe retrieved
     # so we can apply the mean operations
     # maybe check the type of the datas e.g dict or array to adapt
+    # return a new variable
+    means_dict = {}
     for key in dict_datas_of_symbols:
         if dict_datas_of_symbols[key]: 
-            dict_datas_of_symbols[key] = statistics.mean(dict_datas_of_symbols[key]) 
+            means_dict[key] = statistics.mean(dict_datas_of_symbols[key])
+    return means_dict
+
+def scatter_plot(dataframe, x_data, y_data, name_of_the_file="undefined_plot", format="png"):
+    if not dataframe.empty and x_data in dataframe.columns and y_data in dataframe.columns:
+        cwd = os.getcwd()
+        curr_path = f"{cwd}/PLOTS"
+        curr_plot =  sns.scatterplot(data=dataframe, x=dataframe[x_data], y=dataframe[y_data])
+        plt.savefig(f"{curr_path}/{name_of_the_file}.{format}")
+    else:
+        if dataframe.empty:
+            print(f"The dataframe is empty, can't plot")
+        elif x_data not in dataframe.columns:
+            print(f"x_data is not a column of the dataframe")
+        elif y_data not in dataframe.columns:
+            print(f"y_data is not a column of the dataframe")
+
+# main function should be available for every markets with data available
+# clean datas differently for plotting
+# once the general analysis is done make a function that give detailed information about specifics tickers
+# check the price of the datas to see if the datas are not outdated

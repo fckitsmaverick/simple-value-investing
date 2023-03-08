@@ -2,3 +2,5 @@
 *.env
 CSV/
 __pycache__/
+PLOTS/
+*.png
