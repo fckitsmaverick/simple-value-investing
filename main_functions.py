@@ -74,7 +74,7 @@ def api_call(symbol):
             break
         except:
             count += 1
-            if count == 4:
+            if count == 5:
                 print("Can't find this ticker, will pass")
                 break
             print(f"{count} attempts, can't find this ticker, trying again")
@@ -82,34 +82,55 @@ def api_call(symbol):
     return stockQuote, financialRatios, keyMetrics, discountedCashFlow
 
 def get_datas(list_of_symbols):
+    # will problably have to change this function it's too messy
     #declare the dictionnaries which will store the different data
-    price, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumberTTM, enterpriseValueTTM, \
+    price, bulk_datas, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumberTTM, enterpriseValueTTM, \
         returnOnInvestedCapitalTTM, enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM = \
-          ({} for i in range(8))
+          ({} for i in range(9))
     meanReturnOnEquityTTM, meanPriceEarningsRatioTTM, meanReturnOnInvestedCapitalTTM = ([] for i in range(3))
     counter = 0
     for symbol in list_of_symbols:
         # make the api calls
         stockQuote, financialRatios, keyMetrics, discountedCashFlow  = api_call(symbol)
         # retrieve the different datas we are interested in
-        retrieve_datas(stockQuote, "price", symbol, price)
-        retrieve_datas(financialRatios, "returnOnEquityTTM", symbol, returnOnEquityTTM, meanReturnOnEquityTTM)
-        retrieve_datas(financialRatios, "priceEarningsRatioTTM", symbol, priceEarningsRatioTTM, meanPriceEarningsRatioTTM)
-        retrieve_datas(financialRatios, "returnOnCapitalEmployedTTM", symbol, returnOnInvestedCapitalTTM, meanReturnOnInvestedCapitalTTM)
-        retrieve_datas(keyMetrics, "grahamNumberTTM", symbol, grahamNumberTTM)
-        retrieve_datas(keyMetrics, "enterpriseValueTTM", symbol, enterpriseValueTTM)
-        retrieve_datas(keyMetrics, "enterpriseValueOverEBITDATTM", symbol, enterpriseValueOverEBITDATTM)
-        retrieve_datas(keyMetrics, "evToFreeCashFlowTTM", symbol, enterpriseValueOverFreeCashFlowTTM)
+        retrieve_datas(stockQuote, "price", symbol, price, bulk_datas)
+        retrieve_datas(financialRatios, "returnOnEquityTTM", symbol, returnOnEquityTTM, bulk_datas, meanReturnOnEquityTTM)
+        retrieve_datas(financialRatios, "priceEarningsRatioTTM", symbol, priceEarningsRatioTTM, bulk_datas, meanPriceEarningsRatioTTM)
+        retrieve_datas(financialRatios, "returnOnCapitalEmployedTTM", symbol, returnOnInvestedCapitalTTM, bulk_datas, meanReturnOnInvestedCapitalTTM)
+        retrieve_datas(keyMetrics, "grahamNumberTTM", symbol, grahamNumberTTM, bulk_datas)
+        retrieve_datas(keyMetrics, "enterpriseValueTTM", symbol, enterpriseValueTTM, bulk_datas)
+        retrieve_datas(keyMetrics, "enterpriseValueOverEBITDATTM", symbol, enterpriseValueOverEBITDATTM, bulk_datas)
+        retrieve_datas(keyMetrics, "evToFreeCashFlowTTM", symbol, enterpriseValueOverFreeCashFlowTTM, bulk_datas)
         counter += 1
         print(f"{counter} ticker(s) retrieved")
-        if counter == 5000:
+        if counter == 5:
             break
         timer_function_end = time.perf_counter()
         print(f"Time elapsed to retrive this ticker : {timer_function_end - timer_function_start}")
         means_dict = {"roeMean" : meanReturnOnEquityTTM, "perMean" : meanPriceEarningsRatioTTM, "roicMean" : meanReturnOnInvestedCapitalTTM}
-    return price, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumberTTM, enterpriseValueTTM, returnOnInvestedCapitalTTM, \
+    return price, bulk_datas, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumberTTM, enterpriseValueTTM, returnOnInvestedCapitalTTM, \
     enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM, means_dict
 
+def retrieve_datas(symbol_datas, specific_data, symbol, symbol_dict, bulk_dict, mean_array = None):
+    symbol = symbol.replace(".", "-") # some stocks have points in it and that stop from retrieving the datas
+    if not symbol_datas or symbol_datas[0][f"{specific_data}"] == None:
+        print(f"{specific_data} not found")
+    else:
+        symbol_dict[symbol] = symbol_datas[0][f"{specific_data}"]
+        if specific_data == "price":
+            print(f"Price is {symbol_dict[symbol]}")
+        if bulk_dict.get(specific_data) == None:
+            bulk_dict[specific_data] = []
+            bulk_dict[specific_data].append(symbol_datas[0][f"{specific_data}"])
+        else:
+            bulk_dict[specific_data].append(symbol_datas[0][f"{specific_data}"])
+        # after that i should recover datas for every year
+        print(f"Found {specific_data}")
+        if mean_array != None:
+            mean_array.append(symbol_datas[0][f"{specific_data}"])
+
+def datas_from_dict(dict, return_dict):
+    pass
 
 def sorting_dict_values(dic):
     sorted_dic = {key : value for key, value in sorted(dic.items(), key=lambda value : value[1], reverse=False)}
@@ -131,41 +152,47 @@ def dic_to_CSV(dic, name):
     df.to_csv(f"{path}/{name}.csv", index=True, header=True)
     return
 
-def retrieve_datas(bulk_datas, specific_data, symbol, name_of_the_dict, mean_array = None):
-    symbol = symbol.replace(".", "-") # some stocks have points in it and that stop from retrieving the datas
-    if not bulk_datas or bulk_datas[0][f"{specific_data}"] == None:
-        print(f"{specific_data} not found")
-    else:
-        name_of_the_dict[symbol] = bulk_datas[0][f"{specific_data}"]
-        print(f"Found {specific_data}")
-        if(mean_array != None):
-            mean_array.append(bulk_datas[0][f"{specific_data}"])
 
-#clean data for mean calculation
-def data_cleaning(array):
+#clean data for mean calculation, type of data is like: roe, per, ev etc
+def data_cleaning(array, data: str):
     # need to improve this in the future since it removes too much value on the upper bound i think
+    # IF YOU REALLY WANT A CORRECT CLEANING YOU MUST DO IT MANUALLY THIS FUNCTION IS JUST HERE TO FASTEN THE PROCESS AND AVOID CRAZY VALUES (even when
+    # they make sense)
+    data = data.lower()
+    print(data)
     median = np.median(array)
     q1 = np.quantile(array, 0.25)
     q3 = np.quantile(array, 0.75)
     iqr = q3 - q1
-    # the widely accepted constant for this type of outliers is 1.5 but in our case it's too small
-    upper_bound_outlier = q3 + 2.25*(iqr)
-    lower_bound_outlier = q1 - 2.25*(iqr)
-    l, r = 0, len(array)-1
+    if data == "roe":
+        # the widely accepted constant for this type of outliers is 1.5 but in the case of roe it's too small
+        upper_bound_outlier = q3 + 2.25*(iqr)
+        lower_bound_outlier = q1 - 2.25*(iqr)
+    elif data == "per":
+        lower_bound_outlier = q1 - 1.5*(iqr)
+        upper_bound_outlier = q3 + 1.5*(iqr)
+    elif data == "price":
+        # only clean the prices for plotting
+        lower_bound_outlier = q1 - 1.5*(iqr)
+        upper_bound_outlier = q3 + 1.5*(iqr)
+    else:
+        print(f"Can't clean this type of datas")
+        return
     while(True):
-        if array[l] > lower_bound_outlier and array[len(array)-1] < upper_bound_outlier:
-            # stop if all values are in the range
-            break
-        elif array[l] < lower_bound_outlier:
-            # if the value is out of bound remove it and remove one from the other side too to balance it
-            array.pop(0)
-            array.pop()
-        elif array[len(array)-1] > upper_bound_outlier:
-            # same for upper bound
-            array.pop()
-            array.pop(0)
+            if array[0] > lower_bound_outlier and array[len(array)-1] < upper_bound_outlier:
+                # stop if all values are in the range
+                break
+            elif array[0] < lower_bound_outlier:
+                # if the value is out of bound remove it and remove one from the other side too to balance it
+                array.pop(0)
+                array.pop()
+            elif array[len(array)-1] > upper_bound_outlier:
+                # same for upper bound
+                array.pop()
+                array.pop(0)
     print(median, q1, q3, upper_bound_outlier, lower_bound_outlier)
     return array
+
 
 
 def calculate_means(dict_datas_of_symbols):
@@ -179,12 +206,21 @@ def calculate_means(dict_datas_of_symbols):
             means_dict[key] = statistics.mean(dict_datas_of_symbols[key])
     return means_dict
 
-def scatter_plot(dataframe, x_data, y_data, name_of_the_file="undefined_plot", format="png"):
+def scatter_plot(dataframe, x_data, y_data, x_limits: list = None, y_limits: list = None, name_of_the_file="undefined_plot", format="png"):
     if not dataframe.empty and x_data in dataframe.columns and y_data in dataframe.columns:
         cwd = os.getcwd()
         curr_path = f"{cwd}/PLOTS"
         curr_plot =  sns.scatterplot(data=dataframe, x=dataframe[x_data], y=dataframe[y_data])
+        if x_limits != None:
+            plt.xlim(left=x_limits[0])
+            plt.xlim(right=x_limits[1])
+        if y_limits != None:
+            plt.ylim(bottom=y_limits[0])
+            plt.ylim(top=y_limits[1])
+            print(plt.ylim())
         plt.savefig(f"{curr_path}/{name_of_the_file}.{format}")
+        # clear the current figure otherwise it'll overlap
+        plt.clf()
     else:
         if dataframe.empty:
             print(f"The dataframe is empty, can't plot")
@@ -193,7 +229,28 @@ def scatter_plot(dataframe, x_data, y_data, name_of_the_file="undefined_plot", f
         elif y_data not in dataframe.columns:
             print(f"y_data is not a column of the dataframe")
 
+def histogram_plot(dataframe, x_data, bin_width, x_limits: list = None, name_of_the_file="histogram_plot", format="png", KDE=False):
+    if not dataframe.empty and x_data in dataframe.columns:
+        cwd = os.getcwd()
+        curr_path = f"{cwd}/PLOTS"
+        curr_plot = sns.histplot(data=dataframe, x=dataframe[x_data], binwidth=bin_width, kde=KDE)
+        if x_limits != None:
+            plt.xlim(left=x_limits[0])
+            plt.xlim(right=x_limits[1])
+        plt.savefig(f"{curr_path}/{name_of_the_file}.{format}")
+        # clear the current figure otherwise it'll overlap
+        plt.clf()
+    else:
+        if dataframe.empty:
+            print(f"The dataframe is empty")
+        elif x_data not in dataframe.columns:
+            print(f"x_data is not a column of the dataframe")
+
+
+# populate the classes market and stock
 # main function should be available for every markets with data available
 # clean datas differently for plotting
 # once the general analysis is done make a function that give detailed information about specifics tickers
+# check the dates of the datas
 # check the price of the datas to see if the datas are not outdated
+# normalize the datas for a weighted average and then a score
