@@ -8,6 +8,7 @@ import numpy as np, seaborn as sns
 import matplotlib.pyplot as plt
 
 import main_functions as mf
+import classes as cls
 
 time_start = time.perf_counter()
 
@@ -15,11 +16,11 @@ sns.set_theme()
 
 load_dotenv()
 apikey = os.environ.get("api_key")
-  
+ 
 SP500List = mf.get_SP500_list()
 
 price, main_datas, roe, per, grahamNumber, enterpriseValueTTM, returnOnInvestedCapitalTTM, enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM, \
-    datas_means_dict = mf.get_datas(SP500List)
+    datas_means_dict = mf.get_datasTTM(SP500List)
 
 clean_datas_dict = {}
 
@@ -32,6 +33,8 @@ datas_means_dict["perMean"] = cleaned_per
 # calculate means function takes a dict so i have to reassignate
 
 final_means_dict = mf.calculate_means(datas_means_dict)
+standard_deviation = mf.calculate_standard_deviation_population(main_datas)
+print(standard_deviation)
 
 
 
@@ -75,7 +78,7 @@ df_all_values = pd.DataFrame.from_dict(all_values, orient="index")
 df_final_all_values = pd.concat([df_all_values, df_market_means], axis=1)
 
 # function for plotting will NOT transpose the dict, meaning that when you turn your dict to a pandas dataframe you MUST include --> orient="index" 
-mf.scatter_plot(df_all_values, x_data="Price", y_data="ReturnOnEquityTTM", x_limits=[0, 340], y_limits=[-0.50, 0.9], name_of_the_file="roe_scatter_plot")
+mf.scatter_plot(df_final_all_values, x_data="Price", y_data="ReturnOnEquityTTM", x_limits=[0, 340], y_limits=[-0.50, 0.9], name_of_the_file="roe_scatter_plot")
 mf.histogram_plot(df_final_all_values, bin_width=20, x_data="Price", x_limits=[0, 1000])
 mf.scatter_plot(df_final_all_values, x_data="Price", y_data="EnterpriseValueTTM", name_of_the_file="price_to_ev_plot")
 
@@ -86,7 +89,16 @@ dict_all_values = df_final_all_values.transpose().to_dict()
 mf.dic_to_CSV(dict_worth_interest, "WorthInterest")
 mf.dic_to_CSV(dict_all_values, "NotRetainedValue")
 
+SP500 = cls.market("SP500", 2022)
+print(SP500.name)
+
 time_end = time.perf_counter()
+
+stock = input("Enter which stock interests you : ")
+
+stock_interest = mf.retrieve_stock_datas(stock)
+mf.build_stock_dicts(stock_interest, stock)
+
 
 print(f"Timer in seconds : {time_end - time_start}")
 # roe = net income / total shareholders equity
