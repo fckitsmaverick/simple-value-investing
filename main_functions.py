@@ -75,7 +75,7 @@ def stock_api_call(symbol):
     count = 0
     for attempts in range(4):
         try:
-            financialStatement = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/income-statement/{symbol}?limit=120&apikey={apikey}")
+            balanceSheetStatement = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/balance-sheet-statement/{symbol}?limit=120&apikey={apikey}")
             keyMetrics = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/key-metrics/{symbol}?limit=40&apikey={apikey}")
             stockQuote = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/quote-short/{symbol}?apikey={apikey}")
         except:
@@ -84,7 +84,7 @@ def stock_api_call(symbol):
                 print("Can't find this ticker")
                 break
             print(f"{count} attempts, can't find this ticker, trying again")
-    return financialStatement, keyMetrics, stockQuote
+    return balanceSheetStatement, keyMetrics, stockQuote
 
 def get_datasTTM(list_of_symbols):
     # will problably have to change this function it's too messy
@@ -108,7 +108,7 @@ def get_datasTTM(list_of_symbols):
         retrieve_datasTTM(keyMetrics, "evToFreeCashFlowTTM", symbol, enterpriseValueOverFreeCashFlowTTM, bulk_datas)
         counter += 1
         print(f"{counter} ticker(s) retrieved")
-        if counter == 5000:
+        if counter == 5:
             break
         timer_function_end = time.perf_counter()
         print(f"Time elapsed to retrive this ticker : {timer_function_end - timer_function_start}")
@@ -136,20 +136,20 @@ def retrieve_datasTTM(symbol_datas, specific_data, symbol, symbol_dict, bulk_dic
 
 
 def retrieve_stock_datas(symbol):
-    financial_dict, key_metrics_dict, quote_dict = stock_api_call(symbol)
+    balance_sheet_dict, key_metrics_dict, quote_dict = stock_api_call(symbol)
     return_dict = {}
     symbol = symbol.replace(".", "-") 
     return_dict[symbol] = {}
     counter = 0
-    for key in financial_dict:
-        date = financial_dict[counter]["date"]
+    for key in balance_sheet_dict:
+        date = balance_sheet_dict[counter]["date"]
         year = ""
         for i in range(4):
             year += date[i]
         # it will cause a problem if key metrics data go further in the past than financial statements (that souldn't happen normally but ...)
         return_dict[symbol][year] = {}
-        return_dict[symbol][year]["financialStatements"] = {}
-        return_dict[symbol][year]["financialStatements"] = financial_dict[counter]
+        return_dict[symbol][year]["balanceSheetStatements"] = {}
+        return_dict[symbol][year]["balanceSheetStatements"] = balance_sheet_dict[counter]
         counter+=1
     counter = 0 
     for key in key_metrics_dict:
@@ -165,12 +165,12 @@ def retrieve_stock_datas(symbol):
 def build_stock_dicts(stock_dict, stock: str):
     # maybe add years upper bound and lower bound arguments ?
     # build unique dict for each stock composent like financial statements, key metrics, dcf and then save them to csv ....
-    financial_statements_dict = {}
+    balance_sheet_dict = {}
     key_metrics_dict = {}
     for i in range(2022, 2000, -1):
         if stock_dict[stock].get(str(i)) != None:
-            if stock_dict[stock][str(i)].get("financialStatements") != None:
-                financial_statements_dict[str(i)] = stock_dict[stock][str(i)]["financialStatements"]
+            if stock_dict[stock][str(i)].get("balanceSheetStatements") != None:
+                balance_sheet_dict[str(i)] = stock_dict[stock][str(i)]["balanceSheetStatements"]
             else:
                 break
     for i in range(2022, 2000, -1):
@@ -178,8 +178,8 @@ def build_stock_dicts(stock_dict, stock: str):
             key_metrics_dict[str(i)] = stock_dict[stock][str(i)]["keyMetrics"]
         else:
             break
-    dic_to_CSV(financial_statements_dict, f"{stock}_financial_statements")
-    dic_to_CSV(key_metrics_dict, f"{stock}_key_metrics")
+    dic_to_CSV(balance_sheet_dict, f"{stock}balanceSheetStatements")
+    dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics")
 
 
 
@@ -209,7 +209,6 @@ def data_cleaning(array, data: str):
     # IF YOU REALLY WANT A CORRECT CLEANING YOU MUST DO IT MANUALLY THIS FUNCTION IS JUST HERE TO FASTEN THE PROCESS AND AVOID CRAZY VALUES (even when
     # they make sense)
     data = data.lower()
-    print(data)
     median = np.median(array)
     q1 = np.quantile(array, 0.25)
     q3 = np.quantile(array, 0.75)
@@ -240,7 +239,6 @@ def data_cleaning(array, data: str):
                 # same for upper bound
                 array.pop()
                 array.pop(0)
-    print(median, q1, q3, upper_bound_outlier, lower_bound_outlier)
     return array
 
 def market_data_cleaning(dict):

@@ -22,6 +22,8 @@ SP500List = mf.get_SP500_list()
 price, main_datas, roe, per, grahamNumber, enterpriseValueTTM, returnOnInvestedCapitalTTM, enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM, \
     datas_means_dict = mf.get_datasTTM(SP500List)
 
+mf.dic_to_CSV(main_datas, "buldDatas")
+
 clean_datas_dict = {}
 
 # have to clean ROE alone i think
