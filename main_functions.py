@@ -58,7 +58,6 @@ def api_call(symbol):
             #scores = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v4/score?symbol={symbol}&apikey={apikey}")
             keyMetricsTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={apikey}")
             stockQuoteTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/quote/{symbol}?apikey={apikey}")
-            discountedCashFlowTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v4/advanced_levered_discounted_cash_flow?symbol={symbol}&apikey={apikey}")
             print(f"FOUND TICKER: {symbol}")
             break
         except:
@@ -68,7 +67,7 @@ def api_call(symbol):
                 break
             print(f"{count} attempts, can't find this ticker, trying again")
             continue
-    return stockQuoteTTM, financialRatiosTTM, keyMetricsTTM, discountedCashFlowTTM
+    return stockQuoteTTM, financialRatiosTTM, keyMetricsTTM
 
 
 def stock_api_call(symbol):
@@ -77,28 +76,46 @@ def stock_api_call(symbol):
         try:
             balanceSheetStatement = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/balance-sheet-statement/{symbol}?limit=120&apikey={apikey}")
             keyMetrics = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/key-metrics/{symbol}?limit=40&apikey={apikey}")
+            cashFlowStatements = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/cash-flow-statement/{symbol}?limit=120&apikey={apikey}")
             stockQuote = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/quote-short/{symbol}?apikey={apikey}")
+            break
         except:
             count += 1
-            if count == 5000:
+            if count == 5:
                 print("Can't find this ticker")
                 break
             print(f"{count} attempts, can't find this ticker, trying again")
-    return balanceSheetStatement, keyMetrics, stockQuote
+    return balanceSheetStatement, keyMetrics, stockQuote, cashFlowStatements
+
+
+####################################################################################################################################################
+
+                                                        # MAIN FUNCTION #
+
+####################################################################################################################################################
 
 def get_datasTTM(list_of_symbols):
-    # will problably have to change this function it's too messy
+    # will problably have to change this function it's doing too much
     #declare the dictionnaries which will store the different data
-    price, bulk_datas, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumberTTM, enterpriseValueTTM, \
-        returnOnInvestedCapitalTTM, enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM = \
-          ({} for i in range(9))
+    (price, 
+     bulk_datas,
+       dividendPerShareTTM,
+         returnOnEquityTTM,
+           priceEarningsRatioTTM,
+             grahamNumberTTM,
+               enterpriseValueTTM,
+                returnOnInvestedCapitalTTM,
+                  enterpriseValueOverEBITDATTM,
+                    enterpriseValueOverFreeCashFlowTTM)= ({} for i in range(10))
+    
     meanReturnOnEquityTTM, meanPriceEarningsRatioTTM, meanReturnOnInvestedCapitalTTM = ([] for i in range(3))
     counter = 0
     for symbol in list_of_symbols:
         # make the api calls
-        stockQuote, financialRatios, keyMetrics, discountedCashFlow  = api_call(symbol)
+        stockQuote, financialRatios, keyMetrics = api_call(symbol)
         # retrieve the different datas we are interested in
         retrieve_datasTTM(stockQuote, "price", symbol, price, bulk_datas)
+        retrieve_datasTTM(financialRatios, "dividendPerShareTTM", symbol, dividendPerShareTTM, bulk_datas)
         retrieve_datasTTM(financialRatios, "returnOnEquityTTM", symbol, returnOnEquityTTM, bulk_datas, meanReturnOnEquityTTM)
         retrieve_datasTTM(financialRatios, "priceEarningsRatioTTM", symbol, priceEarningsRatioTTM, bulk_datas, meanPriceEarningsRatioTTM)
         retrieve_datasTTM(financialRatios, "returnOnCapitalEmployedTTM", symbol, returnOnInvestedCapitalTTM, bulk_datas, meanReturnOnInvestedCapitalTTM)
@@ -113,8 +130,25 @@ def get_datasTTM(list_of_symbols):
         timer_function_end = time.perf_counter()
         print(f"Time elapsed to retrive this ticker : {timer_function_end - timer_function_start}")
         means_dict = {"roeMean" : meanReturnOnEquityTTM, "perMean" : meanPriceEarningsRatioTTM, "roicMean" : meanReturnOnInvestedCapitalTTM}
-    return price, bulk_datas, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumberTTM, enterpriseValueTTM, returnOnInvestedCapitalTTM, \
-    enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM, means_dict
+    return (price, 
+            bulk_datas,
+              dividendPerShareTTM,
+                returnOnEquityTTM,
+                  priceEarningsRatioTTM,
+                    grahamNumberTTM, enterpriseValueTTM,
+                      returnOnInvestedCapitalTTM,
+                        enterpriseValueOverEBITDATTM,
+                         enterpriseValueOverFreeCashFlowTTM,
+                           means_dict)
+
+
+#####################################################################################################################################################
+
+
+
+#####################################################################################################################################################
+
+
 
 def retrieve_datasTTM(symbol_datas, specific_data, symbol, symbol_dict, bulk_dict, mean_array = None):
     symbol = symbol.replace(".", "-") # some stocks have points in it and that stop from retrieving the datas
@@ -136,7 +170,12 @@ def retrieve_datasTTM(symbol_datas, specific_data, symbol, symbol_dict, bulk_dic
 
 
 def retrieve_stock_datas(symbol):
-    balance_sheet_dict, key_metrics_dict, quote_dict = stock_api_call(symbol)
+    time_start = time.perf_counter()
+    balance_sheet_dict, key_metrics_dict, quote_dict, cash_flow_dict = stock_api_call(symbol)
+    # check if the ticker is correct
+    if not balance_sheet_dict and not key_metrics_dict and not quote_dict and not cash_flow_dict:
+        print("No datas available for this ticker")
+        return False
     return_dict = {}
     symbol = symbol.replace(".", "-") 
     return_dict[symbol] = {}
@@ -157,29 +196,50 @@ def retrieve_stock_datas(symbol):
         year = ""
         for i in range(4):
             year += date[i]
+        # won't be useful 99% of the time but sometimes the api can give key metrics without balance sheet ?????
+        if return_dict[symbol].get(year) == None:
+            return_dict[symbol][year] = {}
         return_dict[symbol][year]["keyMetrics"] = {} 
         return_dict[symbol][year]["keyMetrics"] = key_metrics_dict[counter]
         counter += 1
+    counter = 0
+    for key in cash_flow_dict:
+        year = cash_flow_dict[counter]["calendarYear"]
+        if return_dict[symbol].get(year) == None:
+            return_dict[symbol][year] = {}
+        return_dict[symbol][year]["cashFlowStatements"] = {}
+        return_dict[symbol][year]["cashFlowStatements"] = cash_flow_dict[counter]
+        counter+= 1
+    time_end = time.perf_counter()
+    print(f"Retrieved datas for stock : {symbol} \nTime needed : {time_end-time_start}")
     return return_dict
+
 
 def build_stock_dicts(stock_dict, stock: str):
     # maybe add years upper bound and lower bound arguments ?
     # build unique dict for each stock composent like financial statements, key metrics, dcf and then save them to csv ....
     balance_sheet_dict = {}
     key_metrics_dict = {}
-    for i in range(2022, 2000, -1):
-        if stock_dict[stock].get(str(i)) != None:
-            if stock_dict[stock][str(i)].get("balanceSheetStatements") != None:
-                balance_sheet_dict[str(i)] = stock_dict[stock][str(i)]["balanceSheetStatements"]
+    cash_flow_dict = {}
+    for year in range(2022, 2000, -1):
+        if stock_dict[stock].get(str(year)) != None:
+            if stock_dict[stock][str(year)].get("balanceSheetStatements") != None:
+                balance_sheet_dict[str(year)] = stock_dict[stock][str(year)]["balanceSheetStatements"]
             else:
                 break
-    for i in range(2022, 2000, -1):
-        if stock_dict[stock].get(str(i)) != None and stock_dict[stock][str(i)].get("keyMetrics") != None:
-            key_metrics_dict[str(i)] = stock_dict[stock][str(i)]["keyMetrics"]
+    for year in range(2022, 2000, -1):
+        if stock_dict[stock].get(str(year)) != None and stock_dict[stock][str(year)].get("keyMetrics") != None:
+            key_metrics_dict[str(year)] = stock_dict[stock][str(year)]["keyMetrics"]
         else:
             break
-    dic_to_CSV(balance_sheet_dict, f"{stock}balanceSheetStatements")
-    dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics")
+    for year in range(2022, 2000, -1):
+        if stock_dict[stock].get(str(year)) != None and stock_dict[stock][str(year)].get("cashFlowStatements") != None:
+            cash_flow_dict[str(year)] = stock_dict[stock][str(year)]["cashFlowStatements"]
+        else:
+            break
+    dic_to_CSV(balance_sheet_dict, f"{stock}balanceSheetStatements", transpose=False)
+    dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics", transpose=False)
+    dic_to_CSV(cash_flow_dict, f"{stock}cashFlowStatements", transpose=False)
 
 
 
@@ -258,6 +318,9 @@ def market_data_cleaning(dict):
             upper_bound_outlier = q3 + 1.5*(iqr)
         elif data == "price":
             # only clean the prices for plotting
+            lower_bound_outlier = q1 - 1.5*(iqr)
+            upper_bound_outlier = q3 + 1.5*(iqr)
+        else:
             lower_bound_outlier = q1 - 1.5*(iqr)
             upper_bound_outlier = q3 + 1.5*(iqr)
         while True:
@@ -353,11 +416,13 @@ def sorting_nested_dict_values(dic):
     sorted_dic = sorted(dic.items(), key=lambda value : value[1]["roe"])
     return sorted_dic
 
-def dic_to_CSV(dic, name):
+def dic_to_CSV(dic, name, transpose=False):
     current_directory = os.getcwd()
     path = f"{current_directory}/CSV"
     # orient=index means the keys of the dictionary will be rows, because before this line the dict keys are columns
     df = pd.DataFrame.from_dict(dic, orient="index")
+    if transpose == True:
+        df = df.transpose()
     df.to_csv(f"{path}/{name}.csv", index=True, header=True)
     return
 
