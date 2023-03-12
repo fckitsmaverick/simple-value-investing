@@ -77,7 +77,7 @@ def stock_api_call(symbol):
             balanceSheetStatement = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/balance-sheet-statement/{symbol}?limit=120&apikey={apikey}")
             keyMetrics = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/key-metrics/{symbol}?limit=40&apikey={apikey}")
             cashFlowStatements = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/cash-flow-statement/{symbol}?limit=120&apikey={apikey}")
-            stockQuote = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/quote-short/{symbol}?apikey={apikey}")
+            discountedCashFlow = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/discounted-cash-flow/{symbol}?apikey={apikey}")
             break
         except:
             count += 1
@@ -85,7 +85,7 @@ def stock_api_call(symbol):
                 print("Can't find this ticker")
                 break
             print(f"{count} attempts, can't find this ticker, trying again")
-    return balanceSheetStatement, keyMetrics, stockQuote, cashFlowStatements
+    return balanceSheetStatement, keyMetrics, cashFlowStatements, discountedCashFlow
 
 
 ####################################################################################################################################################
@@ -103,10 +103,11 @@ def get_datasTTM(list_of_symbols):
          returnOnEquityTTM,
            priceEarningsRatioTTM,
              grahamNumberTTM,
+                grahamNetNetTTM,
                enterpriseValueTTM,
                 returnOnInvestedCapitalTTM,
                   enterpriseValueOverEBITDATTM,
-                    enterpriseValueOverFreeCashFlowTTM)= ({} for i in range(10))
+                    enterpriseValueOverFreeCashFlowTTM)= ({} for i in range(11))
     
     meanReturnOnEquityTTM, meanPriceEarningsRatioTTM, meanReturnOnInvestedCapitalTTM = ([] for i in range(3))
     counter = 0
@@ -120,6 +121,7 @@ def get_datasTTM(list_of_symbols):
         retrieve_datasTTM(financialRatios, "priceEarningsRatioTTM", symbol, priceEarningsRatioTTM, bulk_datas, meanPriceEarningsRatioTTM)
         retrieve_datasTTM(financialRatios, "returnOnCapitalEmployedTTM", symbol, returnOnInvestedCapitalTTM, bulk_datas, meanReturnOnInvestedCapitalTTM)
         retrieve_datasTTM(keyMetrics, "grahamNumberTTM", symbol, grahamNumberTTM, bulk_datas)
+        retrieve_datasTTM(keyMetrics, "grahamNetNetTTM", symbol, grahamNetNetTTM, bulk_datas)
         retrieve_datasTTM(keyMetrics, "enterpriseValueTTM", symbol, enterpriseValueTTM, bulk_datas)
         retrieve_datasTTM(keyMetrics, "enterpriseValueOverEBITDATTM", symbol, enterpriseValueOverEBITDATTM, bulk_datas)
         retrieve_datasTTM(keyMetrics, "evToFreeCashFlowTTM", symbol, enterpriseValueOverFreeCashFlowTTM, bulk_datas)
@@ -135,7 +137,9 @@ def get_datasTTM(list_of_symbols):
               dividendPerShareTTM,
                 returnOnEquityTTM,
                   priceEarningsRatioTTM,
-                    grahamNumberTTM, enterpriseValueTTM,
+                    grahamNumberTTM,
+                     grahamNetNetTTM,
+                      enterpriseValueTTM,
                       returnOnInvestedCapitalTTM,
                         enterpriseValueOverEBITDATTM,
                          enterpriseValueOverFreeCashFlowTTM,
@@ -171,9 +175,9 @@ def retrieve_datasTTM(symbol_datas, specific_data, symbol, symbol_dict, bulk_dic
 
 def retrieve_stock_datas(symbol):
     time_start = time.perf_counter()
-    balance_sheet_dict, key_metrics_dict, quote_dict, cash_flow_dict = stock_api_call(symbol)
+    balance_sheet_dict, key_metrics_dict, cash_flow_dict, discounted_cash_flow_dict = stock_api_call(symbol)
     # check if the ticker is correct
-    if not balance_sheet_dict and not key_metrics_dict and not quote_dict and not cash_flow_dict:
+    if not balance_sheet_dict and not key_metrics_dict and not cash_flow_dict and not discounted_cash_flow_dict:
         print("No datas available for this ticker")
         return False
     return_dict = {}
@@ -210,6 +214,7 @@ def retrieve_stock_datas(symbol):
         return_dict[symbol][year]["cashFlowStatements"] = {}
         return_dict[symbol][year]["cashFlowStatements"] = cash_flow_dict[counter]
         counter+= 1
+    return_dict["currentDCF"] = discounted_cash_flow_dict[0]["dcf"]
     time_end = time.perf_counter()
     print(f"Retrieved datas for stock : {symbol} \nTime needed : {time_end-time_start}")
     return return_dict
@@ -221,6 +226,7 @@ def build_stock_dicts(stock_dict, stock: str):
     balance_sheet_dict = {}
     key_metrics_dict = {}
     cash_flow_dict = {}
+    discounted_cash_flow_dict = {}
     for year in range(2022, 2000, -1):
         if stock_dict[stock].get(str(year)) != None:
             if stock_dict[stock][str(year)].get("balanceSheetStatements") != None:
@@ -237,9 +243,11 @@ def build_stock_dicts(stock_dict, stock: str):
             cash_flow_dict[str(year)] = stock_dict[stock][str(year)]["cashFlowStatements"]
         else:
             break
-    dic_to_CSV(balance_sheet_dict, f"{stock}balanceSheetStatements", transpose=False)
-    dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics", transpose=False)
-    dic_to_CSV(cash_flow_dict, f"{stock}cashFlowStatements", transpose=False)
+    discounted_cash_flow_dict["currentDCF"] = stock_dict["currentDCF"]
+    dic_to_CSV(discounted_cash_flow_dict, f"{stock}discountedCashFlow", directory=f"{stock}", transpose=False)
+    dic_to_CSV(balance_sheet_dict, f"{stock}balanceSheetStatements", directory=f"{stock}", transpose=False)
+    dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics", directory=f"{stock}", transpose=False)
+    dic_to_CSV(cash_flow_dict, f"{stock}cashFlowStatements", directory=f"{stock}", transpose=False)
 
 
 
@@ -416,13 +424,18 @@ def sorting_nested_dict_values(dic):
     sorted_dic = sorted(dic.items(), key=lambda value : value[1]["roe"])
     return sorted_dic
 
-def dic_to_CSV(dic, name, transpose=False):
+def dic_to_CSV(dic, name, directory = None, transpose=False):
     current_directory = os.getcwd()
     path = f"{current_directory}/CSV"
     # orient=index means the keys of the dictionary will be rows, because before this line the dict keys are columns
     df = pd.DataFrame.from_dict(dic, orient="index")
     if transpose == True:
         df = df.transpose()
+    if directory != None:
+        if not os.path.exists(f"{path}/{directory}"):
+            os.mkdir(f"{path}/{directory}")
+        df.to_csv(f"{path}/{directory}/{name}.csv")
+        return
     df.to_csv(f"{path}/{name}.csv", index=True, header=True)
     return
 

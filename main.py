@@ -20,7 +20,7 @@ apikey = os.environ.get("api_key")
  
 SP500List = mf.get_SP500_list()
 
-price, market_datas, dividendPerShareTTM, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumber, enterpriseValueTTM, returnOnInvestedCapitalTTM, enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM, \
+price, market_datas, dividendPerShareTTM, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumber, grahamNetNetTTM, enterpriseValueTTM, returnOnInvestedCapitalTTM, enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM, \
 datas_means_dict = mf.get_datasTTM(SP500List)
 
 mf.dic_to_CSV(market_datas, "bulkDatas")
@@ -30,11 +30,10 @@ clean_datas_dict = {}
 # have to clean ROE alone i think
 cleaned_market_datas = mf.market_data_cleaning(market_datas)
 
-final_means_dict = mf.calculate_means(cleaned_market_datas)
-standard_deviation = mf.calculate_standard_deviation_population(cleaned_market_datas)
-print(standard_deviation)
-
-
+meansTTM = mf.calculate_means(cleaned_market_datas)
+standardDeviationTTM = mf.calculate_standard_deviation_population(cleaned_market_datas)
+mf.dic_to_CSV(meansTTM, "meansDict")
+mf.dic_to_CSV(standardDeviationTTM, "standardDeviation")
 
 ROETTM_sorted = mf.sorting_dict_values_reversed(returnOnEquityTTM)
 GrahamNumberTTM_sorted = mf.sorting_dict_values(grahamNumber)
@@ -51,6 +50,7 @@ for symbol in ROETTM_sorted:
         worth_interest[symbol]["Price"] = price[symbol]
         worth_interest[symbol]["dividendPerShare"] = dividendPerShareTTM[symbol]
         worth_interest[symbol]["GrahamNumberTTM"] = GrahamNumberTTM_sorted[symbol]
+        worth_interest[symbol]["grahamNetNetTTM"] = grahamNetNetTTM[symbol]
         worth_interest[symbol]["ReturnOnEquityTTM"] = ROETTM_sorted[symbol]
         worth_interest[symbol]["PriceEarningsRatioTTM"] = priceEarningsRatioTTM[symbol]
         worth_interest[symbol]["EnterpriseValueTTM"] = enterpriseValueTTM[symbol]
@@ -61,12 +61,14 @@ for symbol in ROETTM_sorted:
     all_values[symbol]["Price"] = price[symbol]
     all_values[symbol]["dividendPerShareTTM"] = dividendPerShareTTM[symbol]
     all_values[symbol]["GrahamNumberTTM"] = GrahamNumberTTM_sorted[symbol]
+    all_values[symbol]["grahamNetNetTTM"] = grahamNetNetTTM[symbol]
     all_values[symbol]["ReturnOnEquityTTM"] = ROETTM_sorted[symbol]
     all_values[symbol]["PriceEarningsRatioTTM"] = priceEarningsRatioTTM[symbol]
     all_values[symbol]["EnterpriseValueTTM"] = enterpriseValueTTM[symbol]
     all_values[symbol]["EnterpriseValueOverEBITDATTM"] = enterpriseValueOverEBITDATTM[symbol]
 
-df_market_means = pd.DataFrame.from_dict(final_means_dict, orient="index")
+df_market_means = pd.DataFrame.from_dict(meansTTM, orient="index")
+df_standard_deviation = pd.DataFrame.from_dict(standardDeviationTTM, orient="index")
 
 df_worth_interest = pd.DataFrame.from_dict(worth_interest, orient="index")
 df_final_worth_interest = pd.concat([df_worth_interest, df_market_means], axis=1)
@@ -84,10 +86,9 @@ dict_worth_interest = df_worth_interest.transpose().to_dict()
 dict_all_values = df_final_all_values.transpose().to_dict()
 
 mf.dic_to_CSV(dict_worth_interest, "WorthInterest")
-mf.dic_to_CSV(dict_all_values, "NotRetainedValue")
+mf.dic_to_CSV(dict_all_values, "allValues")
 
 SP500 = cls.market("SP500", 2022)
-print(SP500.name)
 
 symbols = inp.user_input()
 for symbol in symbols:
