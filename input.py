@@ -3,6 +3,24 @@ import os
 import sys
 apikey = os.environ.get("api_key")
 
+def user_market():
+    ans = input("Which market do you want to analyze ? ")
+    clean_ans = ans.lower().replace(" ", "")
+    if clean_ans == "sp500":
+        market = mf.get_SP500()
+    elif clean_ans == "nyse":
+        market = mf.get_NYSE()
+    elif clean_ans == "nasdaq":
+        # market = mf.get_NASDAQ()
+        pass
+    elif clean_ans == "euronext":
+        # market = mf.get_EURONEXT()
+       pass 
+    elif clean_ans == "cac40":
+        # market = mf.get_CAC40()
+        pass
+    return market, clean_ans
+
 
 def user_tickers():
     user_inp = input("Please enter the stock(s) symbol(s) that you want to analyze (use a comma to separate the tickers): ")
@@ -11,6 +29,7 @@ def user_tickers():
         new_s = symbols[i].strip().replace(" ", "").upper()
         symbols[i] = str(new_s)
     return symbols
+
 
 def stock_screener_input(user_request=False):
     # This function is UGLY
@@ -116,6 +135,8 @@ def user_input():
         These commands are not case sensitive
               """)
         return True
+    elif clean_input == "market":
+        pass
     elif clean_input == "screener":
         stock_screener_input(user_request=True)
         return True

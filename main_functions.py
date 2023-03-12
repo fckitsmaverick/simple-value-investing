@@ -19,7 +19,6 @@ apikey = os.environ.get("api_key")
 if apikey == None:
     sys.exit("No APIKEY")
 
-
 def get_jsonparsed_data(url):
     """
     Receive the content of ``url``, parse it as JSON and return the object.
@@ -37,13 +36,29 @@ def get_jsonparsed_data(url):
     return json.loads(data)
 
 
-def get_SP500_list():
+def get_SP500():
     url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
     sp = pd.read_html(url)
     first_table = sp[0]
     second_table = sp[1]
     tickers = first_table["Symbol"]
     return tickers   
+
+def get_NYSE():
+    # you MUST put the limit parameter in the url and set it high otherwise you won't have all the stock !
+    nyse_list = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/stock-screener?exchange=NYSE&limit=5000&apikey={apikey}")
+    print(len(nyse_list))
+    tickers = []
+    count = 0
+    # get json parsed data return a list not a dict
+    for key in nyse_list:
+        symbol = nyse_list[count]["symbol"]
+        tickers.append(symbol)
+        count+=1
+    size = len(tickers)
+    estimated_time = (size*3.5)/60
+    print(estimated_time)
+    return tickers
 
 def api_call(symbol):
     global timer_function_start
@@ -55,7 +70,6 @@ def api_call(symbol):
         try:
             # add enterprise value / ebitda and enterprise value / free cash flow both are in keyMetricsTTM
             financialRatiosTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/ratios-ttm/{symbol}?apikey={apikey}")
-            #scores = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v4/score?symbol={symbol}&apikey={apikey}")
             keyMetricsTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={apikey}")
             stockQuoteTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/quote/{symbol}?apikey={apikey}")
             print(f"FOUND TICKER: {symbol}")
@@ -127,7 +141,7 @@ def get_datasTTM(list_of_symbols):
         retrieve_datasTTM(keyMetrics, "evToFreeCashFlowTTM", symbol, enterpriseValueOverFreeCashFlowTTM, bulk_datas)
         counter += 1
         print(f"{counter} ticker(s) retrieved")
-        if counter == 5:
+        if counter == 500:
             break
         timer_function_end = time.perf_counter()
         print(f"Time elapsed to retrive this ticker : {timer_function_end - timer_function_start}")
@@ -220,7 +234,7 @@ def retrieve_stock_datas(symbol):
     return return_dict
 
 
-def build_stock_dicts(stock_dict, stock: str):
+def build_stock_dicts(stock_dict, stock: str, market_name):
     # maybe add years upper bound and lower bound arguments ?
     # build unique dict for each stock composent like financial statements, key metrics, dcf and then save them to csv ....
     balance_sheet_dict = {}
@@ -244,10 +258,10 @@ def build_stock_dicts(stock_dict, stock: str):
         else:
             break
     discounted_cash_flow_dict["currentDCF"] = stock_dict["currentDCF"]
-    dic_to_CSV(discounted_cash_flow_dict, f"{stock}discountedCashFlow", directory=f"{stock}", transpose=False)
-    dic_to_CSV(balance_sheet_dict, f"{stock}balanceSheetStatements", directory=f"{stock}", transpose=False)
-    dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics", directory=f"{stock}", transpose=False)
-    dic_to_CSV(cash_flow_dict, f"{stock}cashFlowStatements", directory=f"{stock}", transpose=False)
+    dic_to_CSV(discounted_cash_flow_dict, f"{stock}discountedCashFlow", directory=f"{market_name}/{stock}", transpose=False)
+    dic_to_CSV(balance_sheet_dict, f"{stock}balanceSheetStatements", directory=f"{market_name}/{stock}", transpose=False)
+    dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics", directory=f"{market_name}/{stock}", transpose=False)
+    dic_to_CSV(cash_flow_dict, f"{stock}cashFlowStatements", directory=f"{market_name}/{stock}", transpose=False)
 
 
 
@@ -424,7 +438,7 @@ def sorting_nested_dict_values(dic):
     sorted_dic = sorted(dic.items(), key=lambda value : value[1]["roe"])
     return sorted_dic
 
-def dic_to_CSV(dic, name, directory = None, transpose=False):
+def dic_to_CSV(dic, name: str, directory: str = None, transpose=False):
     current_directory = os.getcwd()
     path = f"{current_directory}/CSV"
     # orient=index means the keys of the dictionary will be rows, because before this line the dict keys are columns

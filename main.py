@@ -18,12 +18,12 @@ sns.set_theme()
 load_dotenv()
 apikey = os.environ.get("api_key")
  
-SP500List = mf.get_SP500_list()
+marketPick, market_name = inp.user_market()
 
 price, market_datas, dividendPerShareTTM, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumber, grahamNetNetTTM, enterpriseValueTTM, returnOnInvestedCapitalTTM, enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM, \
-datas_means_dict = mf.get_datasTTM(SP500List)
+datas_means_dict = mf.get_datasTTM(marketPick)
 
-mf.dic_to_CSV(market_datas, "bulkDatas")
+mf.dic_to_CSV(market_datas, "bulkDatas", f"{market_name}")
 
 clean_datas_dict = {}
 
@@ -32,15 +32,15 @@ cleaned_market_datas = mf.market_data_cleaning(market_datas)
 
 meansTTM = mf.calculate_means(cleaned_market_datas)
 standardDeviationTTM = mf.calculate_standard_deviation_population(cleaned_market_datas)
-mf.dic_to_CSV(meansTTM, "meansDict")
-mf.dic_to_CSV(standardDeviationTTM, "standardDeviation")
+mf.dic_to_CSV(meansTTM, "meansDict", f"{market_name}")
+mf.dic_to_CSV(standardDeviationTTM, "standardDeviation", f"{market_name}")
 
 ROETTM_sorted = mf.sorting_dict_values_reversed(returnOnEquityTTM)
 GrahamNumberTTM_sorted = mf.sorting_dict_values(grahamNumber)
 
 
 # convert my dictionnary into a CSV File
-mf.dic_to_CSV(ROETTM_sorted, "ROE")
+mf.dic_to_CSV(ROETTM_sorted, "ROE", f"{market_name}")
 
 worth_interest, all_values = ({} for i in range(2))
 
@@ -85,8 +85,8 @@ mf.scatter_plot(df_final_all_values, x_data="Price", y_data="EnterpriseValueTTM"
 dict_worth_interest = df_worth_interest.transpose().to_dict()
 dict_all_values = df_final_all_values.transpose().to_dict()
 
-mf.dic_to_CSV(dict_worth_interest, "WorthInterest")
-mf.dic_to_CSV(dict_all_values, "allValues")
+mf.dic_to_CSV(dict_worth_interest, "WorthInterest", f"{market_name}")
+mf.dic_to_CSV(dict_all_values, "allValues", f"{market_name}")
 
 SP500 = cls.market("SP500", 2022)
 
@@ -97,7 +97,7 @@ if symbols[0] != "":
         stock_dict = mf.retrieve_stock_datas(symbol)
         if stock_dict == False:
             continue
-        mf.build_stock_dicts(stock_dict, symbol)
+        mf.build_stock_dicts(stock_dict, symbol, market_name)
 
 inp.stock_screener_input()
 
