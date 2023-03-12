@@ -90,12 +90,19 @@ mf.dic_to_CSV(dict_all_values, "allValues")
 
 SP500 = cls.market("SP500", 2022)
 
-symbols = inp.user_input()
-for symbol in symbols:
-    stock_dict = mf.retrieve_stock_datas(symbol)
-    if stock_dict == False:
-        continue
-    mf.build_stock_dicts(stock_dict, symbol)
+symbols = inp.user_tickers()
+print(symbols)
+if symbols[0] != "":
+    for symbol in symbols:
+        stock_dict = mf.retrieve_stock_datas(symbol)
+        if stock_dict == False:
+            continue
+        mf.build_stock_dicts(stock_dict, symbol)
+
+inp.stock_screener_input()
+
+answer = inp.user_input()
+if answer == True: inp.user_input()
 
 time_end = time.perf_counter()
 
