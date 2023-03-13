@@ -78,7 +78,7 @@ df_final_all_values = pd.concat([df_all_values, df_market_means], axis=1)
 
 # function for plotting will NOT transpose the dict, meaning that when you turn your dict to a pandas dataframe you MUST include --> orient="index" 
 mf.scatter_plot(df_final_all_values, x_data="Price", y_data="ReturnOnEquityTTM", x_limits=[0, 340], y_limits=[-0.50, 0.9], name_of_the_file="roe_scatter_plot")
-mf.histogram_plot(df_final_all_values, bin_width=20, x_data="Price", x_limits=[0, 1000])
+mf.histogram_plot(df_final_all_values, bin_width=20, x_data="Price", x_limits=[0, 500])
 mf.scatter_plot(df_final_all_values, x_data="Price", y_data="EnterpriseValueTTM", name_of_the_file="price_to_ev_plot")
 
 # transpose put the symbol as index

@@ -1,24 +1,42 @@
 import main_functions as mf
 import os
 import sys
+
+import datas_retrieving
+
 apikey = os.environ.get("api_key")
 
 def user_market():
     ans = input("Which market do you want to analyze ? ")
     clean_ans = ans.lower().replace(" ", "")
-    if clean_ans == "sp500":
-        market = mf.get_SP500()
-    elif clean_ans == "nyse":
-        market = mf.get_NYSE()
-    elif clean_ans == "nasdaq":
-        # market = mf.get_NASDAQ()
-        pass
-    elif clean_ans == "euronext":
-        # market = mf.get_EURONEXT()
-       pass 
+    if clean_ans == "nyse" or clean_ans == "nasdaq" or clean_ans == "euronext" or clean_ans == "amex" or clean_ans == "tsx":
+        market = datas_retrieving.get_exchange(clean_ans)
+    elif clean_ans == "sp500":
+        market = datas_retrieving.get_SP500()
     elif clean_ans == "cac40":
-        # market = mf.get_CAC40()
-        pass
+        market = datas_retrieving.get_CAC40()
+    elif clean_ans == "paris" or clean_ans=="OSS117":
+        market = datas_retrieving.faut_absolument_que_jappelle_Armand()
+    elif clean_ans == "london" or clean_ans == "lse":
+        market = datas_retrieving.get_LSE()
+    elif clean_ans == "shenzhen" or clean_ans == "szse":
+        market = datas_retrieving.get_SHENZHEN()
+    elif clean_ans == "hkse" or clean_ans == "hong kong":
+        market = datas_retrieving.get_HKSE()
+    elif clean_ans == "tokyo" or clean_ans == "tse" or clean_ans == "tyo":
+        market = datas_retrieving.get_TKSE()
+    elif clean_ans == "shanghai" or clean_ans == "sse" or clean_ans == "shh":
+        market = datas_retrieving.get_SSE() 
+    elif clean_ans == "bangkok" or clean_ans == "set" or clean_ans == "thailand":
+        market = datas_retrieving.get_SET()
+    elif clean_ans == "moscow" or clean_ans == "mcx":
+        market = datas_retrieving.get_MCX()
+    elif clean_ans == "madrid" or clean_ans == "spain" or clean_ans == "mc" or clean_ans == "bme":
+        market = datas_retrieving.get_BME()
+    elif clean_ans == "singapore" or clean_ans == "sgx":
+        market = datas_retrieving.get_SGX()
+    elif clean_ans == "jakarta" or clean_ans == "jsx" or clean_ans == "indonesia":
+        market = datas_retrieving.get_JSX()
     return market, clean_ans
 
 

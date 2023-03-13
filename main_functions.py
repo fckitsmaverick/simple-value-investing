@@ -7,6 +7,8 @@ import certifi
 import json
 import math, statistics, numpy as np, seaborn as sns, matplotlib.pyplot as plt
 
+from scipy import stats
+
 
 try:
     from urllib.request import urlopen
@@ -36,35 +38,10 @@ def get_jsonparsed_data(url):
     return json.loads(data)
 
 
-def get_SP500():
-    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-    sp = pd.read_html(url)
-    first_table = sp[0]
-    second_table = sp[1]
-    tickers = first_table["Symbol"]
-    return tickers   
-
-def get_NYSE():
-    # you MUST put the limit parameter in the url and set it high otherwise you won't have all the stock !
-    nyse_list = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/stock-screener?exchange=NYSE&limit=5000&apikey={apikey}")
-    print(len(nyse_list))
-    tickers = []
-    count = 0
-    # get json parsed data return a list not a dict
-    for key in nyse_list:
-        symbol = nyse_list[count]["symbol"]
-        tickers.append(symbol)
-        count+=1
-    size = len(tickers)
-    estimated_time = (size*3.5)/60
-    print(estimated_time)
-    return tickers
-
 def api_call(symbol):
     global timer_function_start
     timer_function_start = time.perf_counter()
     count = 0
-    symbol = symbol.replace(".", "-")
     for attemps in range(4):
         # check for errors
         try:
@@ -141,7 +118,7 @@ def get_datasTTM(list_of_symbols):
         retrieve_datasTTM(keyMetrics, "evToFreeCashFlowTTM", symbol, enterpriseValueOverFreeCashFlowTTM, bulk_datas)
         counter += 1
         print(f"{counter} ticker(s) retrieved")
-        if counter == 500:
+        if counter == 5:
             break
         timer_function_end = time.perf_counter()
         print(f"Time elapsed to retrive this ticker : {timer_function_end - timer_function_start}")
@@ -169,7 +146,6 @@ def get_datasTTM(list_of_symbols):
 
 
 def retrieve_datasTTM(symbol_datas, specific_data, symbol, symbol_dict, bulk_dict, mean_array = None):
-    symbol = symbol.replace(".", "-") # some stocks have points in it and that stop from retrieving the datas
     if not symbol_datas or symbol_datas[0][f"{specific_data}"] == None:
         print(f"{specific_data} not found")
     else:
@@ -195,7 +171,6 @@ def retrieve_stock_datas(symbol):
         print("No datas available for this ticker")
         return False
     return_dict = {}
-    symbol = symbol.replace(".", "-") 
     return_dict[symbol] = {}
     counter = 0
     for key in balance_sheet_dict:
@@ -454,6 +429,12 @@ def dic_to_CSV(dic, name: str, directory: str = None, transpose=False):
     return
 
 
+def estimated_time(size: int):
+    estimated_time = (size*3.5)/60
+    hours = math.floor(estimated_time/60)
+    minutes = math.floor(estimated_time%60)
+    print(f"Estimated time to retrieve datas : {hours} hours {minutes} minutes") 
+    time.sleep(4.0)
 
 # populate the classes market and stock
 # retrieve the datas for every year
