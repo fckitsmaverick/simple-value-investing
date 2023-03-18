@@ -118,7 +118,7 @@ def get_datasTTM(list_of_symbols):
         retrieve_datasTTM(keyMetrics, "evToFreeCashFlowTTM", symbol, enterpriseValueOverFreeCashFlowTTM, bulk_datas)
         counter += 1
         print(f"{counter} ticker(s) retrieved")
-        if counter == 5:
+        if counter == 50:
             break
         timer_function_end = time.perf_counter()
         print(f"Time elapsed to retrive this ticker : {timer_function_end - timer_function_start}")
@@ -353,7 +353,6 @@ def calculate_standard_deviation_population(dict_datas):
     return standard_deviation_dict
 
 
-
 def scatter_plot(dataframe, x_data, y_data, x_limits: list = None, y_limits: list = None, name_of_the_file="undefined_plot", format="png"):
     if not dataframe.empty and x_data in dataframe.columns and y_data in dataframe.columns:
         cwd = os.getcwd()
@@ -377,7 +376,7 @@ def scatter_plot(dataframe, x_data, y_data, x_limits: list = None, y_limits: lis
         elif y_data not in dataframe.columns:
             print(f"y_data is not a column of the dataframe")
 
-def histogram_plot(dataframe, x_data, bin_width, x_limits: list = None, name_of_the_file="histogram_plot", format="png", KDE=False):
+def histogram_plot(dataframe, x_data, bin_width, x_limits: list = None, name_of_the_file="histogram_plot", format="png", KDE=True):
     if not dataframe.empty and x_data in dataframe.columns:
         cwd = os.getcwd()
         curr_path = f"{cwd}/PLOTS"

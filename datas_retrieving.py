@@ -161,6 +161,3 @@ def get_exchange(exchange: str, limit=10000):
     print(f"Number of tickers {len(tickers)}")
     estimated_time(len(tickers))
     return tickers
-
-
-

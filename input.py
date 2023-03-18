@@ -15,7 +15,7 @@ def user_market():
         market = datas_retrieving.get_SP500()
     elif clean_ans == "cac40":
         market = datas_retrieving.get_CAC40()
-    elif clean_ans == "paris" or clean_ans=="OSS117":
+    elif clean_ans == "paris" or clean_ans=="oss117":
         market = datas_retrieving.faut_absolument_que_jappelle_Armand()
     elif clean_ans == "london" or clean_ans == "lse":
         market = datas_retrieving.get_LSE()
@@ -37,6 +37,12 @@ def user_market():
         market = datas_retrieving.get_SGX()
     elif clean_ans == "jakarta" or clean_ans == "jsx" or clean_ans == "indonesia":
         market = datas_retrieving.get_JSX()
+    elif clean_ans == "market" or clean_ans == "markets":
+        print("Markets and Indexes currently available are:\nSP500, NYSE, NASDAQ, EURONEXT, AMEX, TORONTO(TSX), CAC40, PARIS, LONDON(LSE), SHENZEN(SZSE),\nHONG-KONG(HKSE), TOKYO(TSE), SHANGHAI(SHH), BANGKOK(SET), MOSCOW(MCX),\nßMADRID(BME), SINGAPORE(SGX), JAKARTA(JSX)")
+        user_market()
+    else:
+        print("Market not supported add the moment. Type MARKETS to see the markets available")
+        user_market()
     return market, clean_ans
 
 
@@ -146,15 +152,16 @@ def user_input():
         print("""
         Commands are:
 
-        q : for exiting program
-        screener : for stock screening
-        stock : for specific stocks analyzes
+        q: for exiting program
+        screener: for stock screening
+        stock: for specific stocks analyzes
+        market: for market analysis
 
         These commands are not case sensitive
               """)
         return True
     elif clean_input == "market":
-        pass
+        user_market()
     elif clean_input == "screener":
         stock_screener_input(user_request=True)
         return True
