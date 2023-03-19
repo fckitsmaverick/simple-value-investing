@@ -85,9 +85,10 @@ def stock_api_call(symbol):
 
 ####################################################################################################################################################
 
-def get_datasTTM(list_of_symbols):
+def get_datasTTM(list_of_symbols, limit = 1000000):
     # will problably have to change this function it's doing too much
     #declare the dictionnaries which will store the different data
+    print(limit)
     (price, 
      bulk_datas,
        dividendPerShareTTM,
@@ -118,7 +119,7 @@ def get_datasTTM(list_of_symbols):
         retrieve_datasTTM(keyMetrics, "evToFreeCashFlowTTM", symbol, enterpriseValueOverFreeCashFlowTTM, bulk_datas)
         counter += 1
         print(f"{counter} ticker(s) retrieved")
-        if counter == 50:
+        if counter == limit:
             break
         timer_function_end = time.perf_counter()
         print(f"Time elapsed to retrive this ticker : {timer_function_end - timer_function_start}")

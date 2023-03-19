@@ -3,6 +3,9 @@ import os
 import sys
 
 import datas_retrieving
+import MarkowitzModel
+
+from market import market_analysis
 
 apikey = os.environ.get("api_key")
 
@@ -43,7 +46,7 @@ def user_market():
     else:
         print("Market not supported add the moment. Type MARKETS to see the markets available")
         user_market()
-    return market, clean_ans
+    return market, clean_ans 
 
 
 def user_tickers():
@@ -142,6 +145,16 @@ def stock_screener(marketCapMoreThan: int = 0, marketCapLowerThan: int = 9000000
     print(dict_of_company)
     return dict_of_company
 
+def markowitz_input():
+    tickers = input("Which stocks do you want to include in your portfolio ? ")
+    tickers = tickers.split(",")
+    # Why am i forced to do that seriously ?
+    stocks = []
+    for ticker in tickers:
+        curr = ticker.upper().replace(" ", "").strip()
+        stocks.append(curr)
+    return stocks
+
 
 def user_input():
     user_input = input("If you want to exit the program type q, else type a command or HELP: ")
@@ -160,14 +173,14 @@ def user_input():
         These commands are not case sensitive
               """)
         return True
-    elif clean_input == "market":
-        user_market()
     elif clean_input == "screener":
         stock_screener_input(user_request=True)
-        return True
     elif clean_input == "stock":
         user_tickers()
-        return True
-
+    elif clean_input == "market":
+        market_analysis()
+    elif clean_input == "markowitz":
+        MarkowitzModel.modeling()
+        
 
 # check that user input is correct ?

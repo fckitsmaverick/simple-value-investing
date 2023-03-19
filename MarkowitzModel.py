@@ -4,29 +4,26 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.optimize as optimization
 
+import main_input as inp
+
 # on average there are 252 trading days in a year
 NUM_TRADING_DAYS = 252
 # we will generate random w (different portfolios)
 NUM_PORTFOLIOS = 10000
 
-# stocks we are going to handle
-stocks = ["MSFT", "DB", "GE", "XOM", "GOOG", "NVDA", "JNJ", "JPM", "CVX"]
-
 # historical data - define START and END dates
-start_date = '2012-01-01'
-end_date = '2020-01-01'
+start_date = '2015-01-01'
+end_date = '2023-01-01'
 
-
-def download_data():
-    # name of the stock (key) - stock values (2010-1017) as the values
-    stock_data = {}
-
-    for stock in stocks:
-        # closing prices
-        ticker = yf.Ticker(stock)
-        stock_data[stock] = ticker.history(start=start_date, end=end_date)['Close']
-
-    return pd.DataFrame(stock_data)
+def get_prices():
+    prices = {}
+    for symbol in tickers:
+        ticker = yf.Ticker(symbol)
+        historical = ticker.history(start=start_date, end=end_date)
+        prices[symbol] = historical["Close"]
+    df = pd.DataFrame.from_dict(prices)
+    df.plot(figsize=(10, 6))
+    return df
 
 
 def show_data(data):
@@ -72,7 +69,7 @@ def generate_portfolios(returns):
     portfolio_weights = []
 
     for _ in range(NUM_PORTFOLIOS):
-        w = np.random.random(len(stocks))
+        w = np.random.random(len(tickers))
         w /= np.sum(w)
         portfolio_weights.append(w)
         portfolio_means.append(np.sum(returns.mean() * w) * NUM_TRADING_DAYS)
@@ -102,7 +99,7 @@ def optimize_portfolio(weights, returns):
     # the sum of weights is 1
     constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
     # the weights can be 1 at most: 1 when 100% of money is invested into a single stock
-    bounds = tuple((0, 1) for _ in range(len(stocks)))
+    bounds = tuple((0, 1) for _ in range(len(tickers)))
     return optimization.minimize(fun=min_function_sharpe, x0=weights[0], args=returns
                                  , method='SLSQP', bounds=bounds, constraints=constraints)
 
@@ -123,15 +120,13 @@ def show_optimal_portfolio(opt, rets, portfolio_rets, portfolio_vols):
     plt.plot(statistics(opt['x'], rets)[1], statistics(opt['x'], rets)[0], 'g*', markersize=20.0)
     plt.show()
 
-
-if __name__ == '__main__':
-    dataset = download_data()
-    show_data(dataset)
+def modeling():
+    global tickers
+    tickers = inp.markowitz_input()
+    dataset = get_prices()
     log_daily_returns = calculate_return(dataset)
     # show_statistics(log_daily_returns)
-
     pweights, means, risks = generate_portfolios(log_daily_returns)
-    show_portfolios(means, risks)
     optimum = optimize_portfolio(pweights, log_daily_returns)
-    print_optimal_portfolio(optimum, log_daily_returns)
     show_optimal_portfolio(optimum, log_daily_returns, means, risks)
+    print_optimal_portfolio(optimum, log_daily_returns)
