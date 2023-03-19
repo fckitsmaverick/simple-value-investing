@@ -9,37 +9,44 @@ from market import market_analysis
 
 apikey = os.environ.get("api_key")
 
+market_dict = {
+    "nyse": datas_retrieving.get_exchange,
+    "nasdaq": datas_retrieving.get_exchange,
+    "euronext": datas_retrieving.get_exchange,
+    "amex": datas_retrieving.get_exchange,
+    "tsx": datas_retrieving.get_exchange,
+    "sp500": datas_retrieving.get_SP500,
+    "cac40": datas_retrieving.get_CAC40,
+    "paris": datas_retrieving.faut_absolument_que_jappelle_Armand,
+    "oss117": datas_retrieving.faut_absolument_que_jappelle_Armand,
+    "london": datas_retrieving.get_LSE,
+    "lse": datas_retrieving.get_LSE,
+    "shenzen": datas_retrieving.get_SHENZHEN,
+    "szse": datas_retrieving.get_SHENZHEN,
+    "hkse": datas_retrieving.get_HKSE,
+    "hong kong": datas_retrieving.get_HKSE,
+    "tokyo": datas_retrieving.get_TKSE,
+    "tse": datas_retrieving.get_TKSE,
+    "tkse": datas_retrieving.get_TKSE,
+    "shanghai": datas_retrieving.get_SSE,
+    "sse": datas_retrieving.get_SSE,
+    "bangkok": datas_retrieving.get_SET,
+    "set": datas_retrieving.get_SET,
+    "moscow": datas_retrieving.get_MCX,
+    "mcx": datas_retrieving.get_MCX,
+    "madrid": datas_retrieving.get_BME,
+    "bme": datas_retrieving.get_BME,
+    "singapore": datas_retrieving.get_SGX,
+    "sgx": datas_retrieving.get_SGX,
+    "jakarta": datas_retrieving.get_JSX,
+    "jsx": datas_retrieving.get_JSX,
+}
+
 def user_market():
     ans = input("Which market do you want to analyze ? ")
     clean_ans = ans.lower().replace(" ", "")
-    if clean_ans == "nyse" or clean_ans == "nasdaq" or clean_ans == "euronext" or clean_ans == "amex" or clean_ans == "tsx":
-        market = datas_retrieving.get_exchange(clean_ans)
-    elif clean_ans == "sp500":
-        market = datas_retrieving.get_SP500()
-    elif clean_ans == "cac40":
-        market = datas_retrieving.get_CAC40()
-    elif clean_ans == "paris" or clean_ans=="oss117":
-        market = datas_retrieving.faut_absolument_que_jappelle_Armand()
-    elif clean_ans == "london" or clean_ans == "lse":
-        market = datas_retrieving.get_LSE()
-    elif clean_ans == "shenzhen" or clean_ans == "szse":
-        market = datas_retrieving.get_SHENZHEN()
-    elif clean_ans == "hkse" or clean_ans == "hong kong":
-        market = datas_retrieving.get_HKSE()
-    elif clean_ans == "tokyo" or clean_ans == "tse" or clean_ans == "tyo":
-        market = datas_retrieving.get_TKSE()
-    elif clean_ans == "shanghai" or clean_ans == "sse" or clean_ans == "shh":
-        market = datas_retrieving.get_SSE() 
-    elif clean_ans == "bangkok" or clean_ans == "set" or clean_ans == "thailand":
-        market = datas_retrieving.get_SET()
-    elif clean_ans == "moscow" or clean_ans == "mcx":
-        market = datas_retrieving.get_MCX()
-    elif clean_ans == "madrid" or clean_ans == "spain" or clean_ans == "mc" or clean_ans == "bme":
-        market = datas_retrieving.get_BME()
-    elif clean_ans == "singapore" or clean_ans == "sgx":
-        market = datas_retrieving.get_SGX()
-    elif clean_ans == "jakarta" or clean_ans == "jsx" or clean_ans == "indonesia":
-        market = datas_retrieving.get_JSX()
+    if clean_ans in market_dict:
+        market = market_dict[clean_ans](clean_ans)
     elif clean_ans == "market" or clean_ans == "markets":
         print("Markets and Indexes currently available are:\nSP500, NYSE, NASDAQ, EURONEXT, AMEX, TORONTO(TSX), CAC40, PARIS, LONDON(LSE), SHENZEN(SZSE),\nHONG-KONG(HKSE), TOKYO(TSE), SHANGHAI(SHH), BANGKOK(SET), MOSCOW(MCX),\nßMADRID(BME), SINGAPORE(SGX), JAKARTA(JSX)")
         user_market()
@@ -144,6 +151,8 @@ def stock_screener(marketCapMoreThan: int = 0, marketCapLowerThan: int = 9000000
     dict_of_company = mf.get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/stock-screener?marketCapMoreThan={marketCapMoreThan}&marketCapLowerThan={marketCapLowerThan}&priceMoreThan={priceMoreThan}&priceLowerThan={priceLowerThan}&betaMoreThan={betaMoreThan}&betaLowerThan={betaLowerThan}&volumeMoreThan={volumeMoreThan}&volumeLowerThan={volumeLowerThan}&dividendMoreThan={dividendMoreThan}&dividendLowerThan={dividendLowerThan}&sector={sector}&industry={industry}&Country={country}&exchange={exchange}&limit={limit}&apikey={apikey}")
     print(dict_of_company)
     return dict_of_company
+
+
 
 def markowitz_input():
     tickers = input("Which stocks do you want to include in your portfolio ? ")

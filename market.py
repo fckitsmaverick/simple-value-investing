@@ -51,30 +51,33 @@ def market_analysis():
 
     worth_interest, all_values = ({} for i in range(2))
 
+    params = []
+    
+
     for symbol in ROETTM_sorted:
         if price.get(symbol) != None and GrahamNumberTTM_sorted[symbol] >= price[symbol]:
             worth_interest[symbol] = {}
-            worth_interest[symbol]["Price"] = price[symbol]
-            worth_interest[symbol]["dividendPerShare"] = dividendPerShareTTM[symbol]
-            worth_interest[symbol]["GrahamNumberTTM"] = GrahamNumberTTM_sorted[symbol]
-            worth_interest[symbol]["grahamNetNetTTM"] = grahamNetNetTTM[symbol]
-            worth_interest[symbol]["ReturnOnEquityTTM"] = ROETTM_sorted[symbol]
-            worth_interest[symbol]["PriceEarningsRatioTTM"] = priceEarningsRatioTTM[symbol]
-            worth_interest[symbol]["EnterpriseValueTTM"] = enterpriseValueTTM[symbol]
-            worth_interest[symbol]["EnterpriseValueOverEBITDATTM"] = enterpriseValueOverEBITDATTM[symbol]
+            worth_interest[symbol]["Price"] = price.get(symbol, -1)
+            worth_interest[symbol]["dividendPerShare"] = dividendPerShareTTM.get(symbol, -1)
+            worth_interest[symbol]["GrahamNumberTTM"] = GrahamNumberTTM_sorted.get(symbol, -1)
+            worth_interest[symbol]["grahamNetNetTTM"] = grahamNetNetTTM.get(symbol, -1)
+            worth_interest[symbol]["ReturnOnEquityTTM"] = ROETTM_sorted.get(symbol, -1)
+            worth_interest[symbol]["PriceEarningsRatioTTM"] = priceEarningsRatioTTM.get(symbol, -1)
+            worth_interest[symbol]["EnterpriseValueTTM"] = enterpriseValueTTM.get(symbol, -1)
+            worth_interest[symbol]["EnterpriseValueOverEBITDATTM"] = enterpriseValueOverEBITDATTM.get(symbol, -1)
 
     for symbol in ROETTM_sorted:
         # [parameters, you want, to include, for loop, check .get(symbol)]
         if price.get(symbol) != None:
             all_values[symbol] = {}
-            all_values[symbol]["Price"] = price[symbol]
-            all_values[symbol]["dividendPerShareTTM"] = dividendPerShareTTM[symbol]
-            all_values[symbol]["GrahamNumberTTM"] = GrahamNumberTTM_sorted[symbol]
-            all_values[symbol]["grahamNetNetTTM"] = grahamNetNetTTM[symbol]
-            all_values[symbol]["ReturnOnEquityTTM"] = ROETTM_sorted[symbol]
-            all_values[symbol]["PriceEarningsRatioTTM"] = priceEarningsRatioTTM[symbol]
-            all_values[symbol]["EnterpriseValueTTM"] = enterpriseValueTTM[symbol]
-            all_values[symbol]["EnterpriseValueOverEBITDATTM"] = enterpriseValueOverEBITDATTM[symbol]
+            all_values[symbol]["Price"] = price.get(symbol, -1)
+            all_values[symbol]["dividendPerShareTTM"] = dividendPerShareTTM.get(symbol, -1)
+            all_values[symbol]["GrahamNumberTTM"] = GrahamNumberTTM_sorted.get(symbol, -1)
+            all_values[symbol]["grahamNetNetTTM"] = grahamNetNetTTM.get(symbol, -1)
+            all_values[symbol]["ReturnOnEquityTTM"] = ROETTM_sorted.get(symbol, -1)
+            all_values[symbol]["PriceEarningsRatioTTM"] = priceEarningsRatioTTM.get(symbol, -1)
+            all_values[symbol]["EnterpriseValueTTM"] = enterpriseValueTTM.get(symbol, -1)
+            all_values[symbol]["EnterpriseValueOverEBITDATTM"] = enterpriseValueOverEBITDATTM.get(symbol, -1)
 
     df_market_means = pd.DataFrame.from_dict(meansTTM, orient="index")
     df_standard_deviation = pd.DataFrame.from_dict(standardDeviationTTM, orient="index")
