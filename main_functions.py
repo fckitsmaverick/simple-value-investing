@@ -100,12 +100,14 @@ def get_datasTTM(list_of_symbols, limit = 1000000):
                 returnOnInvestedCapitalTTM,
                   enterpriseValueOverEBITDATTM,
                     enterpriseValueOverFreeCashFlowTTM)= ({} for i in range(11))
-    
+    bulk_key_metrics, bulk_financial_ratios = ({} for i in range(2))
     meanReturnOnEquityTTM, meanPriceEarningsRatioTTM, meanReturnOnInvestedCapitalTTM = ([] for i in range(3))
     counter = 0
     for symbol in list_of_symbols:
         # make the api calls
         stockQuote, financialRatios, keyMetrics = api_call(symbol)
+        bulk_key_metrics[symbol] = keyMetrics[0]
+        bulk_financial_ratios[symbol] = financialRatios[0]
         # retrieve the different datas we are interested in
         retrieve_datasTTM(stockQuote, "price", symbol, price, bulk_datas)
         retrieve_datasTTM(financialRatios, "dividendPerShareTTM", symbol, dividendPerShareTTM, bulk_datas)
@@ -135,7 +137,7 @@ def get_datasTTM(list_of_symbols, limit = 1000000):
                       returnOnInvestedCapitalTTM,
                         enterpriseValueOverEBITDATTM,
                          enterpriseValueOverFreeCashFlowTTM,
-                           means_dict)
+                           means_dict, bulk_financial_ratios, bulk_key_metrics)
 
 
 #####################################################################################################################################################
@@ -426,6 +428,19 @@ def dic_to_CSV(dic, name: str, directory: str = None, transpose=False):
         df.to_csv(f"{path}/{directory}/{name}.csv")
         return
     df.to_csv(f"{path}/{name}.csv", index=True, header=True)
+    return
+
+def df_to_csv(dataframe, name: str, directory: str = None, transpose=False):
+    cwd = os.getcwd()
+    path = f"{cwd}/CSV"
+    if transpose == True:
+        dataframe = dataframe.transpose()
+    if directory != None:
+        if not os.path.exists(f"{path}/{directory}"):
+            os.mkdir(f"{path}/{directory}")
+        dataframe.to_csv(f"{path}/{directory}/{name}.csv")
+    else:
+        dataframe.to_csv(f"{path}/{name}.csv")
     return
 
 

@@ -27,10 +27,18 @@ def market_analysis():
     except(ValueError):
         limit = 100000
 
-    price, market_datas, dividendPerShareTTM, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumber, grahamNetNetTTM, enterpriseValueTTM, returnOnInvestedCapitalTTM, enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM, \
-    datas_means_dict = mf.get_datasTTM(marketPick, limit)
+    price, market_datas, dividendPerShareTTM, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumber, grahamNetNetTTM,\
+    enterpriseValueTTM, returnOnInvestedCapitalTTM, enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM,\
+    datas_means_dict, bulk_financial_ratios, bulk_key_metrics = mf.get_datasTTM(marketPick, limit)
+    print(bulk_financial_ratios)
+
+    # convert bulk datas to dataframe to facilitate calculation later.
+    df_financial_ratios = pd.DataFrame.from_dict(bulk_financial_ratios, orient="index")
+    df_key_metrics = pd.DataFrame.from_dict(bulk_key_metrics, orient="index")
 
     mf.dic_to_CSV(market_datas, "bulkDatas", f"{market_name}")
+    mf.dic_to_CSV(bulk_financial_ratios, "bulkFinancialRatios", f"{market_name}")
+    mf.dic_to_CSV(bulk_key_metrics, "bulkKeyMetrics", f"{market_name}")
 
     clean_datas_dict = {}
 
@@ -45,14 +53,10 @@ def market_analysis():
     ROETTM_sorted = mf.sorting_dict_values_reversed(returnOnEquityTTM)
     GrahamNumberTTM_sorted = mf.sorting_dict_values(grahamNumber)
 
-
-    # convert my dictionnary into a CSV File
-    mf.dic_to_CSV(ROETTM_sorted, "ROE", f"{market_name}")
-
     worth_interest, all_values = ({} for i in range(2))
 
+    # make this a function really
     params = []
-    
 
     for symbol in ROETTM_sorted:
         if price.get(symbol) != None and GrahamNumberTTM_sorted[symbol] >= price[symbol]:

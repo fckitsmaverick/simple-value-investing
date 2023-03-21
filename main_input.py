@@ -42,11 +42,15 @@ market_dict = {
     "jsx": datas_retrieving.get_JSX,
 }
 
+
 def user_market():
     ans = input("Which market do you want to analyze ? ")
     clean_ans = ans.lower().replace(" ", "")
     if clean_ans in market_dict:
-        market = market_dict[clean_ans](clean_ans)
+        try:
+            market = market_dict[clean_ans](clean_ans)
+        except(TypeError):
+            market = market_dict[clean_ans]()
     elif clean_ans == "market" or clean_ans == "markets":
         print("Markets and Indexes currently available are:\nSP500, NYSE, NASDAQ, EURONEXT, AMEX, TORONTO(TSX), CAC40, PARIS, LONDON(LSE), SHENZEN(SZSE),\nHONG-KONG(HKSE), TOKYO(TSE), SHANGHAI(SHH), BANGKOK(SET), MOSCOW(MCX),\nßMADRID(BME), SINGAPORE(SGX), JAKARTA(JSX)")
         user_market()
@@ -176,7 +180,7 @@ def user_input():
 
         q: for exiting program
         screener: for stock screening
-        stock: for specific stocks analyzes
+        stocks: for specific stocks analyzes
         market: for market analysis
 
         These commands are not case sensitive
@@ -184,7 +188,7 @@ def user_input():
         return True
     elif clean_input == "screener":
         stock_screener_input(user_request=True)
-    elif clean_input == "stock":
+    elif clean_input == "stocks":
         user_tickers()
     elif clean_input == "market":
         market_analysis()
