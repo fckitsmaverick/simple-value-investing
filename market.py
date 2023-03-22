@@ -14,7 +14,6 @@ import main_input as inp
 
 def market_analysis():
 
-
     time_start = time.perf_counter()
 
     load_dotenv()
@@ -27,84 +26,46 @@ def market_analysis():
     except(ValueError):
         limit = 100000
 
-    price, market_datas, dividendPerShareTTM, returnOnEquityTTM, priceEarningsRatioTTM, grahamNumber, grahamNetNetTTM,\
-    enterpriseValueTTM, returnOnInvestedCapitalTTM, enterpriseValueOverEBITDATTM, enterpriseValueOverFreeCashFlowTTM,\
-    datas_means_dict, bulk_financial_ratios, bulk_key_metrics = mf.get_datasTTM(marketPick, limit)
-    print(bulk_financial_ratios)
+    bulk_prices, bulk_financial_ratios, bulk_key_metrics = mf.get_datasTTM(marketPick, limit)
 
     # convert bulk datas to dataframe to facilitate calculation later.
+    df_prices = pd.DataFrame.from_dict(bulk_prices, orient="index")
     df_financial_ratios = pd.DataFrame.from_dict(bulk_financial_ratios, orient="index")
     df_key_metrics = pd.DataFrame.from_dict(bulk_key_metrics, orient="index")
 
-    mf.dic_to_CSV(market_datas, "bulkDatas", f"{market_name}")
+    # concatenate the 2 dict for ratios so i can pass it to build dict function
+    df = pd.concat([df_financial_ratios.T, df_key_metrics.T, df_prices.T], axis=0)
+    dict_build = df.to_dict(orient="dict")
+    print(df.to_string())
+
+
     mf.dic_to_CSV(bulk_financial_ratios, "bulkFinancialRatios", f"{market_name}")
     mf.dic_to_CSV(bulk_key_metrics, "bulkKeyMetrics", f"{market_name}")
 
-    clean_datas_dict = {}
 
     # have to clean ROE alone i think
-    cleaned_market_datas = mf.market_data_cleaning(market_datas)
-
-    meansTTM = mf.calculate_means(cleaned_market_datas)
-    standardDeviationTTM = mf.calculate_standard_deviation_population(cleaned_market_datas)
-    mf.dic_to_CSV(meansTTM, "meansDict", f"{market_name}")
-    mf.dic_to_CSV(standardDeviationTTM, "standardDeviation", f"{market_name}")
-
-    ROETTM_sorted = mf.sorting_dict_values_reversed(returnOnEquityTTM)
-    GrahamNumberTTM_sorted = mf.sorting_dict_values(grahamNumber)
-
     worth_interest, all_values = ({} for i in range(2))
 
-    # make this a function really
-    params = []
 
-    for symbol in ROETTM_sorted:
-        if price.get(symbol) != None and GrahamNumberTTM_sorted[symbol] >= price[symbol]:
-            worth_interest[symbol] = {}
-            worth_interest[symbol]["Price"] = price.get(symbol, -1)
-            worth_interest[symbol]["dividendPerShare"] = dividendPerShareTTM.get(symbol, -1)
-            worth_interest[symbol]["GrahamNumberTTM"] = GrahamNumberTTM_sorted.get(symbol, -1)
-            worth_interest[symbol]["grahamNetNetTTM"] = grahamNetNetTTM.get(symbol, -1)
-            worth_interest[symbol]["ReturnOnEquityTTM"] = ROETTM_sorted.get(symbol, -1)
-            worth_interest[symbol]["PriceEarningsRatioTTM"] = priceEarningsRatioTTM.get(symbol, -1)
-            worth_interest[symbol]["EnterpriseValueTTM"] = enterpriseValueTTM.get(symbol, -1)
-            worth_interest[symbol]["EnterpriseValueOverEBITDATTM"] = enterpriseValueOverEBITDATTM.get(symbol, -1)
+    params = ["price", "roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM", "returnOnCapitalEmployedTTM", "grahamNumberTTM", "grahamNetNetTTM",\
+               "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
+                "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM"]
 
-    for symbol in ROETTM_sorted:
-        # [parameters, you want, to include, for loop, check .get(symbol)]
-        if price.get(symbol) != None:
-            all_values[symbol] = {}
-            all_values[symbol]["Price"] = price.get(symbol, -1)
-            all_values[symbol]["dividendPerShareTTM"] = dividendPerShareTTM.get(symbol, -1)
-            all_values[symbol]["GrahamNumberTTM"] = GrahamNumberTTM_sorted.get(symbol, -1)
-            all_values[symbol]["grahamNetNetTTM"] = grahamNetNetTTM.get(symbol, -1)
-            all_values[symbol]["ReturnOnEquityTTM"] = ROETTM_sorted.get(symbol, -1)
-            all_values[symbol]["PriceEarningsRatioTTM"] = priceEarningsRatioTTM.get(symbol, -1)
-            all_values[symbol]["EnterpriseValueTTM"] = enterpriseValueTTM.get(symbol, -1)
-            all_values[symbol]["EnterpriseValueOverEBITDATTM"] = enterpriseValueOverEBITDATTM.get(symbol, -1)
+    user_params = input("Which ratios do you want to include in your CSV files ? (If you want the defaults one press ENTER): ").split(",")
+    print(user_params)
+    if user_params != [""]:
+        params = []
+        for param in user_params:
+            curr = param.replace(" ", "")
+            params.append(curr)
 
-    df_market_means = pd.DataFrame.from_dict(meansTTM, orient="index")
-    df_standard_deviation = pd.DataFrame.from_dict(standardDeviationTTM, orient="index")
+    all_values, graham_classification = mf.build_market_dicts(dict_build, params=params)
 
-    df_worth_interest = pd.DataFrame.from_dict(worth_interest, orient="index")
-    df_final_worth_interest = pd.concat([df_worth_interest, df_market_means], axis=1)
-
-    df_all_values = pd.DataFrame.from_dict(all_values, orient="index")
-    df_final_all_values = pd.concat([df_all_values, df_market_means], axis=1)
+    mf.dic_to_CSV(all_values, "allValues", f"{market_name}", False)
+    mf.dic_to_CSV(graham_classification, "graham_classification", f"{market_name}", False)
 
     # function for plotting will NOT transpose the dict, meaning that when you turn your dict to a pandas dataframe you MUST include --> orient="index" 
-    mf.scatter_plot(df_final_all_values, x_data="Price", y_data="ReturnOnEquityTTM", x_limits=[0, 340], y_limits=[-0.50, 0.9], name_of_the_file="roe_scatter_plot")
-    mf.histogram_plot(df_final_all_values, bin_width=20, x_data="Price", x_limits=[0, 500])
-    mf.scatter_plot(df_final_all_values, x_data="Price", y_data="EnterpriseValueTTM", x_limits=[0, 500], y_limits=[0, 1.5e12], name_of_the_file="price_to_ev_plot")
-
     # transpose put the symbol as index
-    dict_worth_interest = df_worth_interest.transpose().to_dict()
-    dict_all_values = df_final_all_values.transpose().to_dict()
-
-    mf.dic_to_CSV(dict_worth_interest, "WorthInterest", f"{market_name}")
-    mf.dic_to_CSV(dict_all_values, "allValues", f"{market_name}")
-
-    SP500 = cls.market("SP500", 2022)
 
     symbols = inp.user_tickers()
     print(symbols)

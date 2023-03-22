@@ -89,55 +89,26 @@ def get_datasTTM(list_of_symbols, limit = 1000000):
     # will problably have to change this function it's doing too much
     #declare the dictionnaries which will store the different data
     print(limit)
-    (price, 
-     bulk_datas,
-       dividendPerShareTTM,
-         returnOnEquityTTM,
-           priceEarningsRatioTTM,
-             grahamNumberTTM,
-                grahamNetNetTTM,
-               enterpriseValueTTM,
-                returnOnInvestedCapitalTTM,
-                  enterpriseValueOverEBITDATTM,
-                    enterpriseValueOverFreeCashFlowTTM)= ({} for i in range(11))
-    bulk_key_metrics, bulk_financial_ratios = ({} for i in range(2))
+    bulk_prices, bulk_key_metrics, bulk_financial_ratios = ({} for i in range(3))
     meanReturnOnEquityTTM, meanPriceEarningsRatioTTM, meanReturnOnInvestedCapitalTTM = ([] for i in range(3))
     counter = 0
     for symbol in list_of_symbols:
         # make the api calls
         stockQuote, financialRatios, keyMetrics = api_call(symbol)
+        name = stockQuote[0].get("name", "Unknown Name")
+        bulk_prices[symbol] = stockQuote[0]
         bulk_key_metrics[symbol] = keyMetrics[0]
         bulk_financial_ratios[symbol] = financialRatios[0]
         # retrieve the different datas we are interested in
-        retrieve_datasTTM(stockQuote, "price", symbol, price, bulk_datas)
-        retrieve_datasTTM(financialRatios, "dividendPerShareTTM", symbol, dividendPerShareTTM, bulk_datas)
-        retrieve_datasTTM(financialRatios, "returnOnEquityTTM", symbol, returnOnEquityTTM, bulk_datas, meanReturnOnEquityTTM)
-        retrieve_datasTTM(financialRatios, "priceEarningsRatioTTM", symbol, priceEarningsRatioTTM, bulk_datas, meanPriceEarningsRatioTTM)
-        retrieve_datasTTM(financialRatios, "returnOnCapitalEmployedTTM", symbol, returnOnInvestedCapitalTTM, bulk_datas, meanReturnOnInvestedCapitalTTM)
-        retrieve_datasTTM(keyMetrics, "grahamNumberTTM", symbol, grahamNumberTTM, bulk_datas)
-        retrieve_datasTTM(keyMetrics, "grahamNetNetTTM", symbol, grahamNetNetTTM, bulk_datas)
-        retrieve_datasTTM(keyMetrics, "enterpriseValueTTM", symbol, enterpriseValueTTM, bulk_datas)
-        retrieve_datasTTM(keyMetrics, "enterpriseValueOverEBITDATTM", symbol, enterpriseValueOverEBITDATTM, bulk_datas)
-        retrieve_datasTTM(keyMetrics, "evToFreeCashFlowTTM", symbol, enterpriseValueOverFreeCashFlowTTM, bulk_datas)
         counter += 1
+        print(f"Retrieved datas for {name}")
         print(f"{counter} ticker(s) retrieved")
         if counter == limit:
             break
         timer_function_end = time.perf_counter()
         print(f"Time elapsed to retrive this ticker : {timer_function_end - timer_function_start}")
-        means_dict = {"roeMean" : meanReturnOnEquityTTM, "perMean" : meanPriceEarningsRatioTTM, "roicMean" : meanReturnOnInvestedCapitalTTM}
-    return (price, 
-            bulk_datas,
-              dividendPerShareTTM,
-                returnOnEquityTTM,
-                  priceEarningsRatioTTM,
-                    grahamNumberTTM,
-                     grahamNetNetTTM,
-                      enterpriseValueTTM,
-                      returnOnInvestedCapitalTTM,
-                        enterpriseValueOverEBITDATTM,
-                         enterpriseValueOverFreeCashFlowTTM,
-                           means_dict, bulk_financial_ratios, bulk_key_metrics)
+    return bulk_prices, bulk_key_metrics, bulk_financial_ratios
+     
 
 
 #####################################################################################################################################################
@@ -210,6 +181,22 @@ def retrieve_stock_datas(symbol):
     time_end = time.perf_counter()
     print(f"Retrieved datas for stock : {symbol} \nTime needed : {time_end-time_start}")
     return return_dict
+
+def build_market_dicts(market_dict, params, worth_interest: bool = True):
+    all_values = {}
+    graham_classification = {}
+
+    for symbol in market_dict:
+        all_values[symbol] = {}
+        for data in params:
+            if market_dict[symbol].get(data) != None:
+                all_values[symbol][data] = market_dict[symbol][data]
+    for symbol in market_dict:
+        graham_classification[symbol] = {}
+        for data in params:
+            if market_dict[symbol].get(data) != None and market_dict[symbol]["grahamNumberTTM"] > market_dict[symbol]["price"]:
+                graham_classification[symbol][data] = market_dict[symbol][data]
+    return all_values, graham_classification
 
 
 def build_stock_dicts(stock_dict, stock: str, market_name):
