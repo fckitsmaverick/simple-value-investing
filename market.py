@@ -6,6 +6,7 @@ import time
 import sys
 import numpy as np, seaborn as sns
 import matplotlib.pyplot as plt
+import scipy.stats as stats
 
 import main_functions as mf
 import classes as cls
@@ -33,14 +34,28 @@ def market_analysis():
     df_financial_ratios = pd.DataFrame.from_dict(bulk_financial_ratios, orient="index")
     df_key_metrics = pd.DataFrame.from_dict(bulk_key_metrics, orient="index")
 
+    # every mean
+    #df_prmean = stats.trim_mean(df_prices.loc[:, 'price'], 0.05)
+    df_prices_means = df_prices.mean(axis=0).round(3)
+    df_mean_key_metrics = df_key_metrics.mean(axis=0).round(3)
+    df_mean_financial_ratios = df_financial_ratios.mean(axis=0).round(3)
+    df_prices.insert(1, "diffwithmean", df_prices['price']-df_prices_means['price'], True)
+    # need to concat
+    df_concat_means = pd.concat([df_prices_means, df_mean_key_metrics, df_mean_financial_ratios])
+
+    # center the data for Standard Normal Distribution
+    df_centered_key_metrics = df_key_metrics.apply(lambda x: x-x.mean(), axis=0)
+    df_centered_financial_ratios = df_financial_ratios.apply(lambda x: x-x.mean(), axis=0)
+    # Test Shapiro-Wilk ? Probably Useless.
+
     # concatenate the 2 dict for ratios so i can pass it to build dict function
     df = pd.concat([df_financial_ratios.T, df_key_metrics.T, df_prices.T], axis=0)
     dict_build = df.to_dict(orient="dict")
-    print(df.to_string())
-
 
     mf.dic_to_CSV(bulk_financial_ratios, "bulkFinancialRatios", f"{market_name}")
     mf.dic_to_CSV(bulk_key_metrics, "bulkKeyMetrics", f"{market_name}")
+
+    mf.df_to_csv(df_concat_means, "meansDatas", market_name)
 
 
     # have to clean ROE alone i think
@@ -49,7 +64,7 @@ def market_analysis():
 
     params = ["price", "roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM", "returnOnCapitalEmployedTTM", "grahamNumberTTM", "grahamNetNetTTM",\
                "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
-                "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM"]
+                "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM", "growthFreeCashFlow"]
 
     user_params = input("Which ratios do you want to include in your CSV files ? (If you want the defaults one press ENTER): ").split(",")
     print(user_params)
@@ -63,10 +78,8 @@ def market_analysis():
 
     mf.dic_to_CSV(all_values, "allValues", f"{market_name}", False)
     mf.dic_to_CSV(graham_classification, "graham_classification", f"{market_name}", False)
-
-    # function for plotting will NOT transpose the dict, meaning that when you turn your dict to a pandas dataframe you MUST include --> orient="index" 
-    # transpose put the symbol as index
-
+    
+    # should move this in it's own function
     symbols = inp.user_tickers()
     print(symbols)
     if symbols[0] != "":

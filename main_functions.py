@@ -90,15 +90,17 @@ def get_datasTTM(list_of_symbols, limit = 1000000):
     #declare the dictionnaries which will store the different data
     print(limit)
     bulk_prices, bulk_key_metrics, bulk_financial_ratios = ({} for i in range(3))
-    meanReturnOnEquityTTM, meanPriceEarningsRatioTTM, meanReturnOnInvestedCapitalTTM = ([] for i in range(3))
     counter = 0
     for symbol in list_of_symbols:
         # make the api calls
         stockQuote, financialRatios, keyMetrics = api_call(symbol)
-        name = stockQuote[0].get("name", "Unknown Name")
-        bulk_prices[symbol] = stockQuote[0]
-        bulk_key_metrics[symbol] = keyMetrics[0]
-        bulk_financial_ratios[symbol] = financialRatios[0]
+        if stockQuote:
+            name = stockQuote[0].get("name", "Unknown Name")
+            bulk_prices[symbol] = stockQuote[0]
+        if keyMetrics:
+            bulk_key_metrics[symbol] = keyMetrics[0]
+        if financialRatios:
+            bulk_financial_ratios[symbol] = financialRatios[0]
         # retrieve the different datas we are interested in
         counter += 1
         print(f"Retrieved datas for {name}")
@@ -182,21 +184,25 @@ def retrieve_stock_datas(symbol):
     print(f"Retrieved datas for stock : {symbol} \nTime needed : {time_end-time_start}")
     return return_dict
 
-def build_market_dicts(market_dict, params, worth_interest: bool = True):
+
+def build_market_dicts(market_dict, params, worth_interest: bool = True, market_means = None):
+    # WARNING I HAVE TO CHECK FOR THE GRAHAM NUMBER VALUE TO BE PRESENT
     all_values = {}
     graham_classification = {}
-
     for symbol in market_dict:
         all_values[symbol] = {}
         for data in params:
             if market_dict[symbol].get(data) != None:
                 all_values[symbol][data] = market_dict[symbol][data]
     for symbol in market_dict:
+        if market_dict[symbol].get("grahamNumberTTM") == None:
+            continue
         graham_classification[symbol] = {}
         for data in params:
             if market_dict[symbol].get(data) != None and market_dict[symbol]["grahamNumberTTM"] > market_dict[symbol]["price"]:
                 graham_classification[symbol][data] = market_dict[symbol][data]
     return all_values, graham_classification
+
 
 
 def build_stock_dicts(stock_dict, stock: str, market_name):

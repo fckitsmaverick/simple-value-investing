@@ -93,7 +93,6 @@ def min_function_sharpe(weights, returns):
     return -statistics(weights, returns)[2]
 
 
-# what are the constraints? The sum of weights = 1 !!!
 # f(x)=0 this is the function to minimize
 def optimize_portfolio(weights, returns):
     # the sum of weights is 1
