@@ -448,6 +448,18 @@ def estimated_time(size: int):
     print(f"Estimated time to retrieve datas : {hours} hours {minutes} minutes") 
     time.sleep(4.0)
 
+
+
+def aws_s3_upload(market: str):
+    cwd = os.getcwd()
+    files = os.listdir(path=f"{cwd}/CSV/{market}")
+    print(files)
+    for file in files:
+        try:
+            os.system(f"cat {cwd}/CSV/{market}/{file}")
+            os.system(f"aws s3 cp {cwd}/CSV/{market}/{file} s3://mvrckbucket")
+        except:
+            print("Failed to updload")
 # populate the classes market and stock
 # retrieve the datas for every year
 # main function should be available for every markets with data available

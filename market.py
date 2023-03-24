@@ -54,7 +54,7 @@ def market_analysis(market_name):
     "jsx": datas_retrieving.get_JSX,
 }
 
-    limit = 50
+    limit = 5
     try:
         tickers = market_dict[market_name](market_name) 
     except TypeError:
@@ -103,6 +103,8 @@ def market_analysis(market_name):
 
     mf.dic_to_CSV(all_values, "allValues", f"{market_name}", False)
     mf.dic_to_CSV(graham_classification, "graham_classification", f"{market_name}", False)
+
+    mf.aws_s3_upload(market=market_name)
     
     # should move this in it's own function
 
