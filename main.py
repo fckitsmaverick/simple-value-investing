@@ -10,12 +10,13 @@ import matplotlib.pyplot as plt
 import main_functions as mf
 import classes as cls
 import main_input as inp
+import market
 
 if __name__ == "__main__":
     
     time_start = time.perf_counter()
-
-    inp.user_input()
+    markets = ["tse"]
+    market.market_analysis(markets[0])
 
     time_end = time.perf_counter()
 

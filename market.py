@@ -11,23 +11,56 @@ import scipy.stats as stats
 import main_functions as mf
 import classes as cls
 import main_input as inp
+import datas_retrieving
 
 
-def market_analysis():
+def market_analysis(market_name):
 
     time_start = time.perf_counter()
 
     load_dotenv()
     apikey = os.environ.get("api_key")
     
-    marketPick, market_name = inp.user_market()
+    market_dict = {
+    "nyse": datas_retrieving.get_exchange,
+    "nasdaq": datas_retrieving.get_exchange,
+    "euronext": datas_retrieving.get_exchange,
+    "amex": datas_retrieving.get_exchange,
+    "tsx": datas_retrieving.get_exchange,
+    "sp500": datas_retrieving.get_SP500,
+    "cac40": datas_retrieving.get_CAC40,
+    "paris": datas_retrieving.faut_absolument_que_jappelle_Armand,
+    "oss117": datas_retrieving.faut_absolument_que_jappelle_Armand,
+    "london": datas_retrieving.get_LSE,
+    "lse": datas_retrieving.get_LSE,
+    "shenzen": datas_retrieving.get_SHENZHEN,
+    "szse": datas_retrieving.get_SHENZHEN,
+    "hkse": datas_retrieving.get_HKSE,
+    "hong kong": datas_retrieving.get_HKSE,
+    "tokyo": datas_retrieving.get_TKSE,
+    "tse": datas_retrieving.get_TKSE,
+    "tkse": datas_retrieving.get_TKSE,
+    "shanghai": datas_retrieving.get_SSE,
+    "sse": datas_retrieving.get_SSE,
+    "bangkok": datas_retrieving.get_SET,
+    "set": datas_retrieving.get_SET,
+    "moscow": datas_retrieving.get_MCX,
+    "mcx": datas_retrieving.get_MCX,
+    "madrid": datas_retrieving.get_BME,
+    "bme": datas_retrieving.get_BME,
+    "singapore": datas_retrieving.get_SGX,
+    "sgx": datas_retrieving.get_SGX,
+    "jakarta": datas_retrieving.get_JSX,
+    "jsx": datas_retrieving.get_JSX,
+}
 
+    limit = 50
     try:
-        limit = int(input("Do you want to set a limit ? (if not press ENTER): "))
-    except(ValueError):
-        limit = 100000
+        tickers = market_dict[market_name](market_name) 
+    except TypeError:
+        tickers = market_dict[market_name]()
 
-    bulk_prices, bulk_financial_ratios, bulk_key_metrics = mf.get_datasTTM(marketPick, limit)
+    bulk_prices, bulk_financial_ratios, bulk_key_metrics = mf.get_datasTTM(tickers, limit)
 
     # convert bulk datas to dataframe to facilitate calculation later.
     df_prices = pd.DataFrame.from_dict(bulk_prices, orient="index")
@@ -66,33 +99,12 @@ def market_analysis():
                "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
                 "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM", "growthFreeCashFlow"]
 
-    user_params = input("Which ratios do you want to include in your CSV files ? (If you want the defaults one press ENTER): ").split(",")
-    print(user_params)
-    if user_params != [""]:
-        params = []
-        for param in user_params:
-            curr = param.replace(" ", "")
-            params.append(curr)
-
     all_values, graham_classification = mf.build_market_dicts(dict_build, params=params)
 
     mf.dic_to_CSV(all_values, "allValues", f"{market_name}", False)
     mf.dic_to_CSV(graham_classification, "graham_classification", f"{market_name}", False)
     
     # should move this in it's own function
-    symbols = inp.user_tickers()
-    print(symbols)
-    if symbols[0] != "":
-        for symbol in symbols:
-            stock_dict = mf.retrieve_stock_datas(symbol)
-            if stock_dict == False:
-                continue
-            mf.build_stock_dicts(stock_dict, symbol, market_name)
-
-    inp.stock_screener_input()
-
-    answer = inp.user_input()
-    if answer == True: inp.user_input()
 
     time_end = time.perf_counter()
 
