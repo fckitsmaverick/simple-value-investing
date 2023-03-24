@@ -412,6 +412,8 @@ def dic_to_CSV(dic, name: str, directory: str = None, transpose=False):
     current_directory = os.getcwd()
     path = f"{current_directory}/CSV"
     # orient=index means the keys of the dictionary will be rows, because before this line the dict keys are columns
+    if not os.path.exists(f"{current_directory}/CSV"):
+        os.mkdir(f"{current_directory}/CSV")
     df = pd.DataFrame.from_dict(dic, orient="index")
     if transpose == True:
         df = df.transpose()
