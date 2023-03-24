@@ -423,9 +423,9 @@ def dic_to_CSV(dic, name: str, directory: str = None, transpose=False):
     if directory != None:
         if not os.path.exists(f"{path}/{directory}"):
             os.mkdir(f"{path}/{directory}")
-        df.to_csv(f"{path}/{directory}/{name}.csv")
+        df.to_csv(f"{path}/{directory}/{name}{directory}.csv")
         return
-    df.to_csv(f"{path}/{name}.csv", index=True, header=True)
+    df.to_csv(f"{path}/{name}{directory}.csv", index=True, header=True)
     return
 
 def df_to_csv(dataframe, name: str, directory: str = None, transpose=False):
