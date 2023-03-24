@@ -425,6 +425,8 @@ def dic_to_CSV(dic, name: str, directory: str = None, transpose=False):
 
 def df_to_csv(dataframe, name: str, directory: str = None, transpose=False):
     cwd = os.getcwd()
+    if not os.path.exists(f"{cwd}/CSV"):
+        os.mkdir(f"{cwd}/CSV")
     path = f"{cwd}/CSV"
     if transpose == True:
         dataframe = dataframe.transpose()
