@@ -52,6 +52,8 @@ def market_analysis(market_name):
     "sgx": datas_retrieving.get_SGX,
     "jakarta": datas_retrieving.get_JSX,
     "jsx": datas_retrieving.get_JSX,
+    "mexico": datas_retrieving.get_BMX,
+    "bmx": datas_retrieving.get_BMX
 }
 
     limit = 5

@@ -17,9 +17,12 @@ except(ImportError):
 
 load_dotenv()
 apikey = os.environ.get("api_key")
+bucket = os.environ.get("bucket_name")
 
 if apikey == None:
     sys.exit("No APIKEY")
+if bucket == None:
+    sys.exit("No S3 bucket")
 
 def get_jsonparsed_data(url):
     """
@@ -456,8 +459,7 @@ def aws_s3_upload(market: str):
     print(files)
     for file in files:
         try:
-            os.system(f"cat {cwd}/CSV/{market}/{file}")
-            os.system(f"aws s3 cp {cwd}/CSV/{market}/{file} s3://mvrckbucket")
+            os.system(f"aws s3 cp {cwd}/CSV/{market}/{file} s3://{bucket}")
         except:
             print("Failed to updload")
 # populate the classes market and stock

@@ -15,9 +15,9 @@ import market
 if __name__ == "__main__":
     
     time_start = time.perf_counter()
-    markets = ["tse"]
-    market.market_analysis(markets[0])
-
+    markets = ["tse", "nyse", "singapore", "madrid", "bmx", "tsx"]
+    for i in range(0, len(markets)):
+        market.market_analysis(markets[i])
     time_end = time.perf_counter()
 
     print(f"Timer in seconds : {time_end - time_start}")
