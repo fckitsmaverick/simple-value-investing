@@ -90,7 +90,7 @@ def market_analysis(market_name):
     mf.dic_to_CSV(bulk_financial_ratios, "bulkFinancialRatios", f"{market_name}")
     mf.dic_to_CSV(bulk_key_metrics, "bulkKeyMetrics", f"{market_name}")
 
-    mf.df_to_csv(df_concat_means, "meansDatas", market_name)
+    mf.df_to_csv(df_concat_means, f"meansDatas", market_name)
 
 
     # have to clean ROE alone i think
@@ -101,10 +101,13 @@ def market_analysis(market_name):
                "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
                 "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM", "growthFreeCashFlow"]
 
-    all_values, graham_classification = mf.build_market_dicts(dict_build, params=params)
+    all_values, graham_classification, double_graham, small_cap = mf.build_market_dicts(market_dict=dict_build, params=params, worth_interest=True, market_means=df_concat_means)
 
     mf.dic_to_CSV(all_values, "allValues", f"{market_name}", False)
     mf.dic_to_CSV(graham_classification, "graham_classification", f"{market_name}", False)
+    mf.dic_to_CSV(double_graham, "double_graham", f"{market_name}", False)
+    mf.dic_to_CSV(small_cap, "small_caps", f"{market_name}", False)
+
 
     mf.aws_s3_upload(market=market_name)
     

@@ -190,11 +190,19 @@ def build_market_dicts(market_dict, params, worth_interest: bool = True, market_
     # WARNING I HAVE TO CHECK FOR THE GRAHAM NUMBER VALUE TO BE PRESENT
     all_values = {}
     graham_classification = {}
+    double_graham = {}
+    small_caps = {}
     for symbol in market_dict:
         all_values[symbol] = {}
         for data in params:
             if market_dict[symbol].get(data) != None:
                 all_values[symbol][data] = market_dict[symbol][data]
+        if market_dict[symbol].get("marketCapTTM", -1) != -1 and market_dict[symbol].get("marketCapTTM", -1) <= market_means["marketCapTTM"]:
+            try:
+                small_caps[symbol] = {}
+                small_caps[symbol] = all_values[symbol]
+            except:
+                pass
     for symbol in market_dict:
         if market_dict[symbol].get("grahamNumberTTM") == None:
             continue
@@ -202,7 +210,10 @@ def build_market_dicts(market_dict, params, worth_interest: bool = True, market_
         for data in params:
             if market_dict[symbol].get(data) != None and market_dict[symbol]["grahamNumberTTM"] > market_dict[symbol]["price"]:
                 graham_classification[symbol][data] = market_dict[symbol][data]
-    return all_values, graham_classification
+    for symbol in graham_classification:
+        if graham_classification[symbol].get("grahamNetNetTTM", -1) >= 0:
+            double_graham[symbol] = graham_classification[symbol]
+    return all_values, graham_classification, double_graham, small_caps
 
 
 
@@ -421,9 +432,9 @@ def dic_to_CSV(dic, name: str, directory: str = None, transpose=False):
     if directory != None:
         if not os.path.exists(f"{path}/{directory}"):
             os.mkdir(f"{path}/{directory}")
-        df.to_csv(f"{path}/{directory}/{name}.csv")
+        df.to_csv(f"{path}/{directory}/{name}{directory}.csv")
         return
-    df.to_csv(f"{path}/{name}.csv", index=True, header=True)
+    df.to_csv(f"{path}/{name}{directory}.csv", index=True, header=True)
     return
 
 def df_to_csv(dataframe, name: str, directory: str = None, transpose=False):
@@ -436,9 +447,9 @@ def df_to_csv(dataframe, name: str, directory: str = None, transpose=False):
     if directory != None:
         if not os.path.exists(f"{path}/{directory}"):
             os.mkdir(f"{path}/{directory}")
-        dataframe.to_csv(f"{path}/{directory}/{name}.csv")
+        dataframe.to_csv(f"{path}/{directory}/{name}{directory}.csv")
     else:
-        dataframe.to_csv(f"{path}/{name}.csv")
+        dataframe.to_csv(f"{path}/{name}{directory}.csv")
     return
 
 
