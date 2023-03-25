@@ -2,7 +2,7 @@ import pandas as pd
 import os
 from math import floor, ceil
 
-from main_functions import get_jsonparsed_data, estimated_time
+from main_functions import get_jsonparsed_data, estimated_time, df_to_csv
 
 apikey = os.environ.get("api_key")
 
@@ -170,3 +170,15 @@ def get_exchange(exchange: str, limit=10000):
     print(f"Number of tickers {len(tickers)}")
     estimated_time(len(tickers))
     return tickers
+
+def stock_screener(marketCapMoreThan: int = 0, marketCapLowerThan: int = 9000000000000, priceMoreThan: int = 0, priceLowerThan: int = 9000000000000,
+                   betaMoreThan: int = -100000, betaLowerThan: int = 100000, volumeMoreThan: int = 0, volumeLowerThan: int = 9000000000000, 
+                   dividendMoreThan: int = 0, dividendLowerThan: int = 9000000000000, isETF: bool = False, isActivelyTrading: bool = True,
+                   sector: str = "", industry: str = "", country: str = "US", exchange: str = "NYSE", limit: int = 9000000000000  
+                   ):
+    # make an api call for this stock research
+    # break this line really
+    list_of_company = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/stock-screener?marketCapMoreThan={marketCapMoreThan}&marketCapLowerThan={marketCapLowerThan}&priceMoreThan={priceMoreThan}&priceLowerThan={priceLowerThan}&betaMoreThan={betaMoreThan}&betaLowerThan={betaLowerThan}&volumeMoreThan={volumeMoreThan}&volumeLowerThan={volumeLowerThan}&dividendMoreThan={dividendMoreThan}&dividendLowerThan={dividendLowerThan}&sector={sector}&industry={industry}&Country={country}&exchange={exchange}&limit={limit}&apikey={apikey}")
+    df = pd.DataFrame(list_of_company)
+    df_to_csv(df, "stockScreener")
+    return df

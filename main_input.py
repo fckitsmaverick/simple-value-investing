@@ -1,6 +1,7 @@
 import main_functions as mf
 import os
 import sys
+import pandas as pd
 
 import datas_retrieving
 import MarkowitzModel
@@ -137,26 +138,13 @@ def stock_screener_input(user_request=False):
             limit = input("Enter limit: ")
         except(ValueError):
             limit = 9000000000000
-        screener_dict = stock_screener(marketCapMoreThan=marketCapMoreThan, marketCapLowerThan=marketCapLowerThan, priceMoreThan=priceMoreThan,
+        df_screener = datas_retrieving.stock_screener(marketCapMoreThan=marketCapMoreThan, marketCapLowerThan=marketCapLowerThan, priceMoreThan=priceMoreThan,
                        priceLowerThan=priceLowerThan, betaMoreThan=betaMoreThan, betaLowerThan=betaLowerThan, volumeMoreThan=volumeMoreThan,
                          volumeLowerThan=volumeLowerThan, dividendMoreThan=dividendMoreThan, dividendLowerThan=dividendLowerThan,
                             isETF=False, isActivelyTrading=True, sector=sector, industry=industry, country=country, exchange=exchange, limit=limit)
-        mf.dic_to_CSV(screener_dict, "screenerDict")
-        return screener_dict
         
 
 # this one should go with main functions and api calls
-def stock_screener(marketCapMoreThan: int = 0, marketCapLowerThan: int = 9000000000000, priceMoreThan: int = 0, priceLowerThan: int = 9000000000000,
-                   betaMoreThan: int = -100000, betaLowerThan: int = 100000, volumeMoreThan: int = 0, volumeLowerThan: int = 9000000000000, 
-                   dividendMoreThan: int = 0, dividendLowerThan: int = 9000000000000, isETF: bool = False, isActivelyTrading: bool = True,
-                   sector: str = "", industry: str = "", country: str = "US", exchange: str = "NYSE", limit: int = 9000000000000  
-                   ):
-    # make an api call for this stock research
-    # break this line really
-    dict_of_company = mf.get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/stock-screener?marketCapMoreThan={marketCapMoreThan}&marketCapLowerThan={marketCapLowerThan}&priceMoreThan={priceMoreThan}&priceLowerThan={priceLowerThan}&betaMoreThan={betaMoreThan}&betaLowerThan={betaLowerThan}&volumeMoreThan={volumeMoreThan}&volumeLowerThan={volumeLowerThan}&dividendMoreThan={dividendMoreThan}&dividendLowerThan={dividendLowerThan}&sector={sector}&industry={industry}&Country={country}&exchange={exchange}&limit={limit}&apikey={apikey}")
-    return dict_of_company
-
-
 
 def markowitz_input():
     tickers = input("Which stocks do you want to include in your portfolio ? ")
