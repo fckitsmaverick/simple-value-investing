@@ -17,6 +17,7 @@ except(ImportError):
 
 load_dotenv()
 apikey = os.environ.get("api_key")
+bucket = os.environ.get("bucket_name")
 
 if apikey == None:
     sys.exit("No APIKEY")
@@ -447,6 +448,16 @@ def estimated_time(size: int):
     minutes = math.floor(estimated_time%60)
     print(f"Estimated time to retrieve datas : {hours} hours {minutes} minutes") 
     time.sleep(4.0)
+
+def aws_s3_upload(market: str):
+    cwd = os.getcwd()
+    files = os.listdir(path=f"{cwd}/CSV/{market}")
+    print(files)
+    for file in files:
+        try:
+            os.system(f"aws s3 cp {cwd}/CSV/{market}/{file} s3://{bucket}")
+        except:
+            print("Failed to updload")
 
 # populate the classes market and stock
 # retrieve the datas for every year

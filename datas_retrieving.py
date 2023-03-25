@@ -144,7 +144,16 @@ def faut_absolument_que_jappelle_Armand(limit = 10000):
     estimated_time(len(tickers))
     return tickers
 
-
+def get_BMX():
+    # Mexico stock exchange
+    exchange_list = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/financial-statement-symbol-lists?apikey={apikey}")
+    tickers = []
+    for symbol in exchange_list:
+        if symbol[-3:] == ".MX":
+            tickers.append(symbol)
+    print(f"Number of tickers {len(tickers)}")
+    estimated_time(len(tickers))
+    return tickers
 
 
 # works for nyse, nasdaq, euronext, amex and tsx
