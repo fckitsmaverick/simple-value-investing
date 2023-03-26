@@ -50,6 +50,7 @@ def api_call(symbol):
             financialRatiosTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/ratios-ttm/{symbol}?apikey={apikey}")
             keyMetricsTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={apikey}")
             stockQuoteTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/quote/{symbol}?apikey={apikey}")
+            dcf = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/discounted-cash-flow/{symbol}?apikey={apikey}")
             print(f"FOUND TICKER: {symbol}")
             break
         except:
@@ -59,7 +60,7 @@ def api_call(symbol):
                 break
             print(f"{count} attempts, can't find this ticker, trying again")
             continue
-    return stockQuoteTTM, financialRatiosTTM, keyMetricsTTM
+    return stockQuoteTTM, financialRatiosTTM, keyMetricsTTM, dcf
 
 
 def stock_api_call(symbol):
@@ -90,11 +91,11 @@ def get_datasTTM(list_of_symbols, limit = 1000000):
     # will problably have to change this function it's doing too much
     #declare the dictionnaries which will store the different data
     print(limit)
-    bulk_prices, bulk_key_metrics, bulk_financial_ratios = ({} for i in range(3))
+    bulk_prices, bulk_key_metrics, bulk_financial_ratios, bulk_dcf = ({} for i in range(4))
     counter = 0
     for symbol in list_of_symbols:
         # make the api calls
-        stockQuote, financialRatios, keyMetrics = api_call(symbol)
+        stockQuote, financialRatios, keyMetrics, dcf = api_call(symbol)
         if stockQuote:
             name = stockQuote[0].get("name", "Unknown Name")
             bulk_prices[symbol] = stockQuote[0]
@@ -102,6 +103,8 @@ def get_datasTTM(list_of_symbols, limit = 1000000):
             bulk_key_metrics[symbol] = keyMetrics[0]
         if financialRatios:
             bulk_financial_ratios[symbol] = financialRatios[0]
+        if dcf:
+            bulk_dcf[symbol] = dcf[0] 
         # retrieve the different datas we are interested in
         counter += 1
         print(f"Retrieved datas for {name}")
@@ -110,7 +113,7 @@ def get_datasTTM(list_of_symbols, limit = 1000000):
             break
         timer_function_end = time.perf_counter()
         print(f"Time elapsed to retrive this ticker : {timer_function_end - timer_function_start}")
-    return bulk_prices, bulk_key_metrics, bulk_financial_ratios
+    return bulk_prices, bulk_key_metrics, bulk_financial_ratios, bulk_dcf
      
 
 

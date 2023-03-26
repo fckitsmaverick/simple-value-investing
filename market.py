@@ -27,7 +27,7 @@ def market_analysis():
     except(ValueError):
         limit = 5
 
-    bulk_prices, bulk_key_metrics, bulk_financial_ratios = mf.get_datasTTM(marketPick, limit)
+    bulk_prices, bulk_key_metrics, bulk_financial_ratios, bulk_dcf = mf.get_datasTTM(marketPick, limit)
 
     mf.serenity_number(bulk_key_metrics)
     mf.graham_number_percentage(key_metrics_dict=bulk_key_metrics, price=bulk_prices)
@@ -36,6 +36,7 @@ def market_analysis():
     df_prices = pd.DataFrame.from_dict(bulk_prices, orient="index")
     df_financial_ratios = pd.DataFrame.from_dict(bulk_financial_ratios, orient="index")
     df_key_metrics = pd.DataFrame.from_dict(bulk_key_metrics, orient="index")
+    df_dcf = pd.DataFrame.from_dict(bulk_dcf, orient="index")
 
     # every mean
     #df_prmean = stats.trim_mean(df_prices.loc[:, 'price'], 0.05)
@@ -52,7 +53,7 @@ def market_analysis():
     # Test Shapiro-Wilk ? Probably Useless.
 
     # concatenate the 2 dict for ratios so i can pass it to build dict function
-    df = pd.concat([df_financial_ratios.T, df_key_metrics.T, df_prices.T], axis=0)
+    df = pd.concat([df_financial_ratios.T, df_key_metrics.T, df_prices.T, df_dcf.T], axis=0)
     dict_build = df.to_dict(orient="dict")
 
     mf.dic_to_CSV(bulk_financial_ratios, "bulkFinancialRatios", f"{market_name}")
@@ -65,7 +66,7 @@ def market_analysis():
     worth_interest, all_values = ({} for i in range(2))
 
 
-    params = ["price", "roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM", "returnOnCapitalEmployedTTM", "grahamNumberTTM", "serenityNumberTTM",\
+    params = ["price", "dcf, ""roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM", "returnOnCapitalEmployedTTM", "grahamNumberTTM", "serenityNumberTTM",\
                "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
                 "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM", "growthFreeCashFlow"]
 
@@ -77,7 +78,7 @@ def market_analysis():
             curr = param.replace(" ", "")
             params.append(curr)
 
-    all_values, graham_classification, small_cap = mf.build_market_dicts(dict_build, params, df_concat_means)
+    all_values, graham_classification, small_cap = mf.build_market_dicts(dict_build, params, True, df_concat_means)
 
     mf.dic_to_CSV(all_values, "allValues", f"{market_name}", False)
     mf.dic_to_CSV(graham_classification, "graham_classification", f"{market_name}", False)
@@ -95,8 +96,8 @@ def market_analysis():
             mf.build_stock_dicts(stock_dict, symbol, market_name)
 
     dict_stock_screener = inp.stock_screener_input()
-    print(dict_stock_screener)
-    mf.dic_to_CSV(dict_stock_screener, "stockScreener")
+    if dict_stock_screener != False and dict_stock_screener != None:
+        mf.dic_to_CSV(dict_stock_screener, "stockScreener")
 
     answer = inp.user_input()
     if answer == True: inp.user_input()

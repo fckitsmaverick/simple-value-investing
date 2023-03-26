@@ -62,7 +62,7 @@ def market_analysis(market_name):
     except TypeError:
         tickers = market_dict[market_name]()
 
-    bulk_prices,  bulk_key_metrics, bulk_financial_ratios = mf.get_datasTTM(tickers, limit)
+    bulk_prices,  bulk_key_metrics, bulk_financial_ratios, bulk_dcf = mf.get_datasTTM(tickers, limit)
 
     mf.serenity_number(key_metrics_dict=bulk_key_metrics)
     mf.graham_number_percentage(key_metrics_dict=bulk_key_metrics, price=bulk_prices)
@@ -71,6 +71,7 @@ def market_analysis(market_name):
     df_prices = pd.DataFrame.from_dict(bulk_prices, orient="index")
     df_financial_ratios = pd.DataFrame.from_dict(bulk_financial_ratios, orient="index")
     df_key_metrics = pd.DataFrame.from_dict(bulk_key_metrics, orient="index")
+    df_dcf = pd.DataFrame.from_dict(bulk_dcf, orient="index")
 
     # every mean
     #df_prmean = stats.trim_mean(df_prices.loc[:, 'price'], 0.05)
@@ -87,7 +88,7 @@ def market_analysis(market_name):
     # Test Shapiro-Wilk ? Probably Useless.
 
     # concatenate the 2 dict for ratios so i can pass it to build dict function
-    df = pd.concat([df_financial_ratios.T, df_key_metrics.T, df_prices.T], axis=0)
+    df = pd.concat([df_financial_ratios.T, df_key_metrics.T, df_prices.T, df_dcf.T], axis=0)
     dict_build = df.to_dict(orient="dict")
 
     mf.dic_to_CSV(bulk_financial_ratios, "bulkFinancialRatios", f"{market_name}")
@@ -100,7 +101,7 @@ def market_analysis(market_name):
     worth_interest, all_values = ({} for i in range(2))
 
 
-    params = ["price","grahamNumberPercentageTTM" "roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM", "returnOnCapitalEmployedTTM", "grahamNumberTTM", "serenityNumberTTM",\
+    params = ["price", "dcf", "grahamNumberPercentageTTM" "roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM", "returnOnCapitalEmployedTTM", "grahamNumberTTM", "serenityNumberTTM",\
                "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
                 "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM", "growthFreeCashFlow"]
 
