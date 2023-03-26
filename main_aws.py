@@ -15,7 +15,7 @@ import market_aws
 if __name__ == "__main__":
     
     time_start = time.perf_counter()
-    markets = ["tse", "nyse"]
+    markets = ["tse", "nyse", "hkse", "lse", "nasdaq", "oss117"]
     for i in range(0, len(markets)):
         market_aws.market_analysis(markets[i])
     time_end = time.perf_counter()

@@ -210,10 +210,7 @@ def build_market_dicts(market_dict, params, worth_interest: bool = True, market_
         for data in params:
             if market_dict[symbol].get(data) != None and market_dict[symbol]["grahamNumberTTM"] > market_dict[symbol]["price"]:
                 graham_classification[symbol][data] = market_dict[symbol][data]
-    for symbol in graham_classification:
-        if graham_classification[symbol].get("grahamNetNetTTM", -1) >= 0:
-            double_graham[symbol] = graham_classification[symbol]
-    return all_values, graham_classification, double_graham, small_caps
+    return all_values, graham_classification, small_caps
 
 
 
@@ -246,6 +243,11 @@ def build_stock_dicts(stock_dict, stock: str, market_name):
     dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics", directory=f"{market_name}/{stock}", transpose=False)
     dic_to_CSV(cash_flow_dict, f"{stock}cashFlowStatements", directory=f"{market_name}/{stock}", transpose=False)
 
+def final_scores(all_values_dict, market_means):
+    for stock in all_values_dict:
+        if all_values_dict.get("grahamNumberTTM"):
+            pass
+    pass
 
 
 def catch_data(string):
@@ -401,6 +403,23 @@ def histogram_plot(dataframe, x_data, bin_width, x_limits: list = None, name_of_
         elif x_data not in dataframe.columns:
             print(f"x_data is not a column of the dataframe")
 
+def serenity_number(key_metrics_dict):
+    for symbol in key_metrics_dict:
+        eps = key_metrics_dict[symbol].get("revenuePerShareTTM")
+        tbvps = key_metrics_dict[symbol].get("tangibleBookValuePerShareTTM")
+        if eps != None and tbvps != None:
+            key_metrics_dict[symbol]["serenityNumberTTM"] = math.sqrt((12*eps*tbvps))
+        else:
+            key_metrics_dict[symbol]["serenityNumberTTM"] = -1
+
+def graham_number_percentage(key_metrics_dict, price):
+    for symbol in key_metrics_dict:
+        graham = key_metrics_dict[symbol].get("grahamNumberTTM")
+        curr_price = price[symbol].get("price")
+        if graham != None and curr_price != None: 
+            curr = (graham/curr_price)*100
+            if curr > 100: key_metrics_dict[symbol]["grahamNumberPercentageTTM"] = curr
+            else: key_metrics_dict[symbol]["grahamNumberPercentageTTM"] = -1
 
 #####################################################################################################################################################
 

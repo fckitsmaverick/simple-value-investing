@@ -62,7 +62,10 @@ def market_analysis(market_name):
     except TypeError:
         tickers = market_dict[market_name]()
 
-    bulk_prices, bulk_financial_ratios, bulk_key_metrics = mf.get_datasTTM(tickers, limit)
+    bulk_prices,  bulk_key_metrics, bulk_financial_ratios = mf.get_datasTTM(tickers, limit)
+
+    mf.serenity_number(key_metrics_dict=bulk_key_metrics)
+    mf.graham_number_percentage(key_metrics_dict=bulk_key_metrics, price=bulk_prices)
 
     # convert bulk datas to dataframe to facilitate calculation later.
     df_prices = pd.DataFrame.from_dict(bulk_prices, orient="index")
@@ -97,15 +100,14 @@ def market_analysis(market_name):
     worth_interest, all_values = ({} for i in range(2))
 
 
-    params = ["price", "roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM", "returnOnCapitalEmployedTTM", "grahamNumberTTM", "grahamNetNetTTM",\
+    params = ["price","grahamNumberPercentageTTM" "roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM", "returnOnCapitalEmployedTTM", "grahamNumberTTM", "serenityNumberTTM",\
                "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
                 "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM", "growthFreeCashFlow"]
 
-    all_values, graham_classification, double_graham, small_cap = mf.build_market_dicts(market_dict=dict_build, params=params, worth_interest=True, market_means=df_concat_means)
+    all_values, graham_classification, small_cap = mf.build_market_dicts(market_dict=dict_build, params=params, worth_interest=True, market_means=df_concat_means)
 
     mf.dic_to_CSV(all_values, "allValues", f"{market_name}", False)
     mf.dic_to_CSV(graham_classification, "graham_classification", f"{market_name}", False)
-    mf.dic_to_CSV(double_graham, "double_graham", f"{market_name}", False)
     mf.dic_to_CSV(small_cap, "small_caps", f"{market_name}", False)
 
 
