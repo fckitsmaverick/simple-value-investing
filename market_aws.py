@@ -62,11 +62,17 @@ def market_analysis(market_name):
     except TypeError:
         tickers = market_dict[market_name]()
 
-    bulk_prices,  bulk_key_metrics, bulk_financial_ratios, bulk_dcf = mf.get_datasTTM(tickers, limit)
+    bulk_prices,  bulk_key_metrics, bulk_financial_ratios, bulk_dcf, bulkIncomeStatements = mf.get_datasTTM(tickers, limit, mode="aws")
 
-    mf.serenity_number(key_metrics_dict=bulk_key_metrics)
     mf.graham_number_percentage(key_metrics_dict=bulk_key_metrics, price=bulk_prices)
     mf.dcf_percentage(bulk_dcf)
+
+    # average eps_growth for the 5 last years
+    eps_growth_dict = mf.eps_growth(bulkIncomeStatements)
+        
+    #mf.profitability_growth()
+    #mf.debt_growth()
+
 
 
     # convert bulk datas to dataframe to facilitate calculation later.
@@ -75,13 +81,11 @@ def market_analysis(market_name):
     df_key_metrics = pd.DataFrame.from_dict(bulk_key_metrics, orient="index")
     df_dcf = pd.DataFrame.from_dict(bulk_dcf, orient="index")
 
-    # every mean
     #df_prmean = stats.trim_mean(df_prices.loc[:, 'price'], 0.05)
     df_prices_means = df_prices.mean(axis=0).round(3)
     df_mean_key_metrics = df_key_metrics.mean(axis=0).round(3)
     df_mean_financial_ratios = df_financial_ratios.mean(axis=0).round(3)
-    df_prices.insert(1, "diffwithmean", df_prices['price']-df_prices_means['price'], True)
-    # need to concat
+
     df_concat_means = pd.concat([df_prices_means, df_mean_key_metrics, df_mean_financial_ratios])
 
     # center the data for Standard Normal Distribution
@@ -98,13 +102,10 @@ def market_analysis(market_name):
 
     mf.df_to_csv(df_concat_means, f"meansDatas", market_name)
 
-
-    # have to clean ROE alone i think
     worth_interest, all_values = ({} for i in range(2))
 
-
     params = ["price", "dcfPercentage", "grahamNumberPercentageTTM" "roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM",\
-               "returnOnCapitalEmployedTTM", "grahamNumberTTM", "serenityNumberTTM",\
+               "returnOnCapitalEmployedTTM", "grahamNumberTTM",\
                "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
                 "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM", "growthFreeCashFlow"]
 
@@ -115,9 +116,7 @@ def market_analysis(market_name):
     mf.dic_to_CSV(small_cap, "small_caps", f"{market_name}", False)
 
 
-    mf.aws_s3_upload(market=market_name)
-    
-    # should move this in it's own function
+    #mf.aws_s3_upload(market=market_name)
 
     time_end = time.perf_counter()
 

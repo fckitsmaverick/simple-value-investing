@@ -63,6 +63,31 @@ def api_call(symbol):
     return stockQuoteTTM, financialRatiosTTM, keyMetricsTTM, dcf
 
 
+def aws_api_call(symbol):
+    global timer_function_start
+    timer_function_start = time.perf_counter()
+    count = 0
+    for attemps in range(4):
+        # check for errors
+        try:
+            # add enterprise value / ebitda and enterprise value / free cash flow both are in keyMetricsTTM
+            financialRatiosTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/ratios-ttm/{symbol}?apikey={apikey}")
+            keyMetricsTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={apikey}")
+            stockQuoteTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/quote/{symbol}?apikey={apikey}")
+            dcf = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/discounted-cash-flow/{symbol}?apikey={apikey}")
+            incomeStatementsTTM = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v3/income-statement/{symbol}?limit=120&apikey={apikey}")
+            print(f"FOUND TICKER: {symbol}")
+            break
+        except:
+            count += 1
+            if count == 5:
+                print("Can't find this ticker, will pass")
+                break
+            print(f"{count} attempts, can't find this ticker, trying again")
+            continue
+    return stockQuoteTTM, financialRatiosTTM, keyMetricsTTM, dcf, incomeStatementsTTM
+
+
 def stock_api_call(symbol):
     count = 0
     for attempts in range(4):
@@ -87,15 +112,18 @@ def stock_api_call(symbol):
 
 ####################################################################################################################################################
 
-def get_datasTTM(list_of_symbols, limit = 1000000):
+def get_datasTTM(list_of_symbols, limit = 1000000, mode="User"):
     # will problably have to change this function it's doing too much
     #declare the dictionnaries which will store the different data
     print(limit)
-    bulk_prices, bulk_key_metrics, bulk_financial_ratios, bulk_dcf = ({} for i in range(4))
+    bulk_prices, bulk_key_metrics, bulk_financial_ratios, bulk_dcf, bulkIncomeStatements = ({} for i in range(5))
     counter = 0
     for symbol in list_of_symbols:
         # make the api calls
-        stockQuote, financialRatios, keyMetrics, dcf = api_call(symbol)
+        if mode == "User":
+            stockQuote, financialRatios, keyMetrics, dcf = api_call(symbol)
+        elif mode == "aws":
+            stockQuote, financialRatios, keyMetrics, dcf, incomeStatements = aws_api_call(symbol)
         if stockQuote:
             name = stockQuote[0].get("name", "Unknown Name")
             bulk_prices[symbol] = stockQuote[0]
@@ -105,6 +133,8 @@ def get_datasTTM(list_of_symbols, limit = 1000000):
             bulk_financial_ratios[symbol] = financialRatios[0]
         if dcf:
             bulk_dcf[symbol] = dcf[0] 
+        if incomeStatements:
+            bulkIncomeStatements[symbol] = incomeStatements
         # retrieve the different datas we are interested in
         counter += 1
         print(f"Retrieved datas for {name}")
@@ -113,7 +143,10 @@ def get_datasTTM(list_of_symbols, limit = 1000000):
             break
         timer_function_end = time.perf_counter()
         print(f"Time elapsed to retrive this ticker : {timer_function_end - timer_function_start}")
-    return bulk_prices, bulk_key_metrics, bulk_financial_ratios, bulk_dcf
+    if mode == "User":
+        return bulk_prices, bulk_key_metrics, bulk_financial_ratios, bulk_dcf
+    elif mode == "aws":
+        return bulk_prices, bulk_key_metrics, bulk_financial_ratios, bulk_dcf, bulkIncomeStatements
      
 
 
@@ -412,7 +445,10 @@ def serenity_number(key_metrics_dict):
         eps = key_metrics_dict[symbol].get("revenuePerShareTTM")
         tbvps = key_metrics_dict[symbol].get("tangibleBookValuePerShareTTM")
         if eps != None and tbvps != None:
-            key_metrics_dict[symbol]["serenityNumberTTM"] = math.sqrt((12*eps*tbvps))
+            if eps < 0 or tbvps < 0:
+                key_metrics_dict[symbol]["serenityNumberTTM"] = -1
+            else:
+                key_metrics_dict[symbol]["serenityNumberTTM"] = math.sqrt(12*eps*tbvps)
         else:
             key_metrics_dict[symbol]["serenityNumberTTM"] = -1
 
@@ -427,11 +463,30 @@ def graham_number_percentage(key_metrics_dict, price):
 
 def dcf_percentage(dcf_dict):
     for symbol in dcf_dict:
-        price = dcf_dict[symbol].get("Stock Price")
-        dcf = dcf_dict[symbol].get("dcf")
-        if price != None and dcf != None:
-            dcf_percent = (dcf/price)*100
-            dcf_dict[symbol]["dcfPercentage"] = dcf_percent
+        price = dcf_dict[symbol].get("Stock Price", -1)
+        dcf = dcf_dict[symbol].get("dcf", -1)
+        if price != -1 and dcf != -1:
+            try:
+                dcf_percent = (dcf/price)*100
+                dcf_dict[symbol]["dcfPercentage"] = dcf_percent
+            except:
+                dcf_dict[symbol]["dcfPercentage"] = -1
+
+def eps_growth(incomeStatements):
+    # incomeStatements is a 2 level nested dict
+    eps_growth_dict = {}
+    for symbol, statements in incomeStatements.items():
+        eps = []
+        for statement in statements: 
+            eps.append(statement.get("eps", -1))
+        if len(eps) < 5:
+            eps_growth_dict[symbol] = -1
+            continue
+        curr = 0
+        for i in range(0, 5):
+            if eps[i] != 0 and eps[i+1] != 0:
+                curr += (eps[i]/eps[i+1])
+        eps_growth_dict[symbol] = (curr/5)
 
 #####################################################################################################################################################
 
