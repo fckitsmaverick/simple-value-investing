@@ -56,7 +56,8 @@ def market_analysis(market_name):
     "bmx": datas_retrieving.get_BMX
 }
 
-    limit = 5
+
+    limit = 50
     try:
         tickers = market_dict[market_name](market_name) 
     except TypeError:
@@ -69,8 +70,8 @@ def market_analysis(market_name):
 
     # average eps_growth for the 5 last years
     eps_growth_dict = mf.eps_growth(bulkIncomeStatements)
-        
     #mf.profitability_growth()
+
     #mf.debt_growth()
 
 
@@ -80,13 +81,17 @@ def market_analysis(market_name):
     df_financial_ratios = pd.DataFrame.from_dict(bulk_financial_ratios, orient="index")
     df_key_metrics = pd.DataFrame.from_dict(bulk_key_metrics, orient="index")
     df_dcf = pd.DataFrame.from_dict(bulk_dcf, orient="index")
+    df_eps_growth_5years = pd.DataFrame.from_dict(eps_growth_dict, orient="index")
+    df_eps_growth_5years.rename(columns={0:"epsGrowth5Years"}, inplace=True)
 
     #df_prmean = stats.trim_mean(df_prices.loc[:, 'price'], 0.05)
-    df_prices_means = df_prices.mean(axis=0).round(3)
+    df_prices_means = df_prices.mean(axis=0, numeric_only=True).round(3)
     df_mean_key_metrics = df_key_metrics.mean(axis=0).round(3)
     df_mean_financial_ratios = df_financial_ratios.mean(axis=0).round(3)
+    df_mean_eps_growth_5years = df_eps_growth_5years.mean(axis=0).round(3)
+    df_mean_eps_growth_5years.index = ["epsGrowth5Years"]
 
-    df_concat_means = pd.concat([df_prices_means, df_mean_key_metrics, df_mean_financial_ratios])
+    df_concat_means = pd.concat([df_prices_means, df_mean_key_metrics, df_mean_financial_ratios, df_mean_eps_growth_5years])
 
     # center the data for Standard Normal Distribution
     df_centered_key_metrics = df_key_metrics.apply(lambda x: x-x.mean(), axis=0)
@@ -94,8 +99,9 @@ def market_analysis(market_name):
     # Test Shapiro-Wilk ? Probably Useless.
 
     # concatenate the 2 dict for ratios so i can pass it to build dict function
-    df = pd.concat([df_financial_ratios.T, df_key_metrics.T, df_prices.T, df_dcf.T], axis=0)
+    df = pd.concat([df_financial_ratios.T, df_key_metrics.T, df_prices.T, df_dcf.T, df_eps_growth_5years.T], axis=0)
     dict_build = df.to_dict(orient="dict")
+    print(dict_build)
 
     mf.dic_to_CSV(bulk_financial_ratios, "bulkFinancialRatios", f"{market_name}")
     mf.dic_to_CSV(bulk_key_metrics, "bulkKeyMetrics", f"{market_name}")
@@ -105,18 +111,19 @@ def market_analysis(market_name):
     worth_interest, all_values = ({} for i in range(2))
 
     params = ["price", "dcfPercentage", "grahamNumberPercentageTTM" "roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM",\
-               "returnOnCapitalEmployedTTM", "grahamNumberTTM",\
+               "returnOnCapitalEmployedTTM", "grahamNumberTTM", "currentRatioTTM",\
                "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
                 "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM", "growthFreeCashFlow"]
 
     all_values, graham_classification, small_cap = mf.build_market_dicts(market_dict=dict_build, params=params, worth_interest=True, market_means=df_concat_means)
+    final_scores = mf.final_scores(dict_build, df_concat_means, all_values, 10, None)
 
     mf.dic_to_CSV(all_values, "allValues", f"{market_name}", False)
     mf.dic_to_CSV(graham_classification, "graham_classification", f"{market_name}", False)
     mf.dic_to_CSV(small_cap, "small_caps", f"{market_name}", False)
+    mf.dic_to_CSV(final_scores, "final_scores", f"{market_name}", False)
 
-
-    #mf.aws_s3_upload(market=market_name)
+    mf.aws_s3_upload(market=market_name)
 
     time_end = time.perf_counter()
 

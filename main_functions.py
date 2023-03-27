@@ -279,11 +279,15 @@ def build_stock_dicts(stock_dict, stock: str, market_name):
     dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics", directory=f"{market_name}/{stock}", transpose=False)
     dic_to_CSV(cash_flow_dict, f"{stock}cashFlowStatements", directory=f"{market_name}/{stock}", transpose=False)
 
-def final_scores(all_values_dict, market_means):
-    for stock in all_values_dict:
-        if all_values_dict.get("grahamNumberTTM"):
-            pass
-    pass
+def final_scores(all_values_dict, market_means, built_dict, discount_rate = 10, dict_conditions = None):
+    final_scores = {}
+    for symbol in all_values_dict:
+        if all_values_dict[symbol].get("grahamNumberPercentageTTM", -1) >= 150 and all_values_dict[symbol].get("debtToAssetsTTM", -1) <= 0.50 and\
+              all_values_dict[symbol].get("epsGrowth5Years", -1) >= market_means["epsGrowth5Years"]*1.10 and\
+              all_values_dict[symbol].get("priceEarningsRatioTTM", -1) <=  15 and all_values_dict[symbol].get("currentRatioTTM", -1) >= 1.1:
+              final_scores[symbol] = built_dict[symbol]
+              final_scores[symbol]["safetyPrice"] = all_values_dict[symbol]["dcf"]*0.90
+    return final_scores
 
 
 def catch_data(string):
@@ -454,8 +458,11 @@ def serenity_number(key_metrics_dict):
 
 def graham_number_percentage(key_metrics_dict, price):
     for symbol in key_metrics_dict:
-        graham = key_metrics_dict[symbol].get("grahamNumberTTM")
-        curr_price = price[symbol].get("price")
+        try:
+            graham = key_metrics_dict[symbol].get("grahamNumberTTM")
+            curr_price = price[symbol].get("price")
+        except:
+            key_metrics_dict[symbol]["grahamNumberPercentageTTM"] = -1
         if graham != None and curr_price != None: 
             curr = (graham/curr_price)*100
             if curr > 100: key_metrics_dict[symbol]["grahamNumberPercentageTTM"] = curr
@@ -479,7 +486,7 @@ def eps_growth(incomeStatements):
         eps = []
         for statement in statements: 
             eps.append(statement.get("eps", -1))
-        if len(eps) < 5:
+        if len(eps) <= 5:
             eps_growth_dict[symbol] = -1
             continue
         curr = 0
@@ -487,6 +494,7 @@ def eps_growth(incomeStatements):
             if eps[i] != 0 and eps[i+1] != 0:
                 curr += (eps[i]/eps[i+1])
         eps_growth_dict[symbol] = (curr/5)
+    return eps_growth_dict
 
 #####################################################################################################################################################
 
