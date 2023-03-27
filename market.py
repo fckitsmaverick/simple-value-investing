@@ -31,6 +31,7 @@ def market_analysis():
 
     mf.serenity_number(bulk_key_metrics)
     mf.graham_number_percentage(key_metrics_dict=bulk_key_metrics, price=bulk_prices)
+    mf.dcf_percentage(bulk_dcf)
 
     # convert bulk datas to dataframe to facilitate calculation later.
     df_prices = pd.DataFrame.from_dict(bulk_prices, orient="index")
@@ -66,7 +67,7 @@ def market_analysis():
     worth_interest, all_values = ({} for i in range(2))
 
 
-    params = ["price", "dcf, ""roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM", "returnOnCapitalEmployedTTM", "grahamNumberTTM", "serenityNumberTTM",\
+    params = ["price", "dcfPercentage, ""roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM", "returnOnCapitalEmployedTTM", "grahamNumberTTM", "serenityNumberTTM",\
                "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
                 "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM", "growthFreeCashFlow"]
 
@@ -106,8 +107,4 @@ def market_analysis():
 
 
     print(f"Timer in seconds : {time_end - time_start}")
-    # roe = net income / total shareholders equity
-    # enterprise value = market cap + total debt - cash and cash equivalent --> if you wanna buy a company you must repay the company's debt
-    # so it's much more expensive to buy a company with a lot of debt but when you buy you keep the cash available in the company
-    # enterprise value / ebitda : the lower the better (if high it's probably overvalued), it's good to compare it with price/earnings ratio, if too high
-    # the probably may have a lot of debt compared to it's earnings
+    

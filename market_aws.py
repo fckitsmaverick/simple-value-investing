@@ -66,6 +66,8 @@ def market_analysis(market_name):
 
     mf.serenity_number(key_metrics_dict=bulk_key_metrics)
     mf.graham_number_percentage(key_metrics_dict=bulk_key_metrics, price=bulk_prices)
+    mf.dcf_percentage(bulk_dcf)
+
 
     # convert bulk datas to dataframe to facilitate calculation later.
     df_prices = pd.DataFrame.from_dict(bulk_prices, orient="index")
@@ -101,7 +103,8 @@ def market_analysis(market_name):
     worth_interest, all_values = ({} for i in range(2))
 
 
-    params = ["price", "dcf", "grahamNumberPercentageTTM" "roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM", "returnOnCapitalEmployedTTM", "grahamNumberTTM", "serenityNumberTTM",\
+    params = ["price", "dcfPercentage", "grahamNumberPercentageTTM" "roeTTM", "dividendPerShareTTM", "priceEarningsRatioTTM",\
+               "returnOnCapitalEmployedTTM", "grahamNumberTTM", "serenityNumberTTM",\
                "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
                 "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM", "growthFreeCashFlow"]
 

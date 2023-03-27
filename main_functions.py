@@ -408,6 +408,7 @@ def histogram_plot(dataframe, x_data, bin_width, x_limits: list = None, name_of_
 
 def serenity_number(key_metrics_dict):
     for symbol in key_metrics_dict:
+        # WROOOOOOOOOOOOONG CORRECT 
         eps = key_metrics_dict[symbol].get("revenuePerShareTTM")
         tbvps = key_metrics_dict[symbol].get("tangibleBookValuePerShareTTM")
         if eps != None and tbvps != None:
@@ -423,6 +424,14 @@ def graham_number_percentage(key_metrics_dict, price):
             curr = (graham/curr_price)*100
             if curr > 100: key_metrics_dict[symbol]["grahamNumberPercentageTTM"] = curr
             else: key_metrics_dict[symbol]["grahamNumberPercentageTTM"] = -1
+
+def dcf_percentage(dcf_dict):
+    for symbol in dcf_dict:
+        price = dcf_dict[symbol].get("Stock Price")
+        dcf = dcf_dict[symbol].get("dcf")
+        if price != None and dcf != None:
+            dcf_percent = (dcf/price)*100
+            dcf_dict[symbol]["dcfPercentage"] = dcf_percent
 
 #####################################################################################################################################################
 
