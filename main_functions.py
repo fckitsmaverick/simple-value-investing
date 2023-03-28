@@ -274,10 +274,10 @@ def build_stock_dicts(stock_dict, stock: str, market_name):
         else:
             break
     discounted_cash_flow_dict["currentDCF"] = stock_dict["currentDCF"]
-    dic_to_CSV(discounted_cash_flow_dict, f"{stock}discountedCashFlow", directory=f"{market_name}/{stock}", transpose=False)
-    dic_to_CSV(balance_sheet_dict, f"{stock}balanceSheetStatements", directory=f"{market_name}/{stock}", transpose=False)
-    dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics", directory=f"{market_name}/{stock}", transpose=False)
-    dic_to_CSV(cash_flow_dict, f"{stock}cashFlowStatements", directory=f"{market_name}/{stock}", transpose=False)
+    dic_to_CSV(discounted_cash_flow_dict, f"{stock}discountedCashFlow", directory=f"{market_name}/{stock}", transpose=False, stock=True, stock_name=stock)
+    dic_to_CSV(balance_sheet_dict, f"{stock}balanceSheetStatements", directory=f"{market_name}/{stock}", transpose=False, stock=True, stock_name=stock)
+    dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics", directory=f"{market_name}/{stock}", transpose=False, stock=True, stock_name=stock)
+    dic_to_CSV(cash_flow_dict, f"{stock}cashFlowStatements", directory=f"{market_name}/{stock}", transpose=False, stock=True, stock_name=stock)
 
 def final_scores(all_values_dict, market_means, built_dict, discount_rate = 10, dict_conditions = None):
     final_scores = {}
@@ -514,7 +514,7 @@ def sorting_nested_dict_values(dic):
     sorted_dic = sorted(dic.items(), key=lambda value : value[1]["roe"])
     return sorted_dic
 
-def dic_to_CSV(dic, name: str, directory: str = None, transpose=False):
+def dic_to_CSV(dic, name: str, directory: str = None, transpose=False, stock=False, stock_name=None):
     current_directory = os.getcwd()
     path = f"{current_directory}/CSV"
     # orient=index means the keys of the dictionary will be rows, because before this line the dict keys are columns
@@ -526,7 +526,10 @@ def dic_to_CSV(dic, name: str, directory: str = None, transpose=False):
     if directory != None:
         if not os.path.exists(f"{path}/{directory}"):
             os.mkdir(f"{path}/{directory}")
-        df.to_csv(f"{path}/{directory}/{name}{directory}.csv")
+        if stock == True:
+           df.to_csv(f"{path}/{directory}/{name}.csv") 
+        else:
+            df.to_csv(f"{path}/{directory}/{name}{directory}.csv")
         return
     df.to_csv(f"{path}/{name}{directory}.csv", index=True, header=True)
     return

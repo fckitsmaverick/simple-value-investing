@@ -177,7 +177,14 @@ def user_input():
     elif clean_input == "screener":
         stock_screener_input(user_request=True)
     elif clean_input == "stocks":
-        user_tickers()
+        stocks = user_tickers()
+        market = input("Enter market symbol: ").strip().replace(" ", "")
+        if stocks[0] != "":
+            for stock in stocks:
+                stock_dict = mf.retrieve_stock_datas(stock)
+                if stock_dict == False:
+                    continue
+                mf.build_stock_dicts(stock_dict, stock, market)
     elif clean_input == "market":
         market_analysis()
     elif clean_input == "markowitz":

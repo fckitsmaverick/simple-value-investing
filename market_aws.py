@@ -57,7 +57,7 @@ def market_analysis(market_name):
 }
 
 
-    limit = 50
+    limit = 1000000
     try:
         tickers = market_dict[market_name](market_name) 
     except TypeError:
@@ -101,7 +101,6 @@ def market_analysis(market_name):
     # concatenate the 2 dict for ratios so i can pass it to build dict function
     df = pd.concat([df_financial_ratios.T, df_key_metrics.T, df_prices.T, df_dcf.T, df_eps_growth_5years.T], axis=0)
     dict_build = df.to_dict(orient="dict")
-    print(dict_build)
 
     mf.dic_to_CSV(bulk_financial_ratios, "bulkFinancialRatios", f"{market_name}")
     mf.dic_to_CSV(bulk_key_metrics, "bulkKeyMetrics", f"{market_name}")
@@ -115,12 +114,12 @@ def market_analysis(market_name):
                "enterpriseValueTTM", "evToFreeCashFlowTTM", "debtToAssetsTTM", "interestCoverageRatioTTM", "capexToRevenueTTM",\
                 "daysPayablesOutstandingTTM", "daysOfInventoryOutstandingTTM", "growthFreeCashFlow"]
 
-    all_values, graham_classification, small_cap = mf.build_market_dicts(market_dict=dict_build, params=params, worth_interest=True, market_means=df_concat_means)
+    all_values, graham_classification, small_caps = mf.build_market_dicts(market_dict=dict_build, params=params, worth_interest=True, market_means=df_concat_means)
     final_scores = mf.final_scores(dict_build, df_concat_means, all_values, 10, None)
 
     mf.dic_to_CSV(all_values, "allValues", f"{market_name}", False)
     mf.dic_to_CSV(graham_classification, "graham_classification", f"{market_name}", False)
-    mf.dic_to_CSV(small_cap, "small_caps", f"{market_name}", False)
+    mf.dic_to_CSV(small_caps, "small_caps", f"{market_name}", False)
     mf.dic_to_CSV(final_scores, "final_scores", f"{market_name}", False)
 
     mf.aws_s3_upload(market=market_name)
