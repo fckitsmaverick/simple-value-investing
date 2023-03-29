@@ -282,11 +282,14 @@ def build_stock_dicts(stock_dict, stock: str, market_name):
 def final_scores(all_values_dict, market_means, built_dict, discount_rate = 10, dict_conditions = None):
     final_scores = {}
     for symbol in all_values_dict:
-        if all_values_dict[symbol].get("grahamNumberPercentageTTM", -1) >= 150 and all_values_dict[symbol].get("debtToAssetsTTM", -1) <= 0.50 and\
-              all_values_dict[symbol].get("epsGrowth5Years", -1) >= market_means["epsGrowth5Years"]*1.10 and\
-              all_values_dict[symbol].get("priceEarningsRatioTTM", -1) <=  15 and all_values_dict[symbol].get("currentRatioTTM", -1) >= 1.1:
-              final_scores[symbol] = built_dict[symbol]
-              final_scores[symbol]["safetyPrice"] = all_values_dict[symbol]["dcf"]*0.90
+        try:
+            if all_values_dict[symbol].get("grahamNumberPercentageTTM", -1) >= 150 and all_values_dict[symbol].get("debtToAssetsTTM", -1) <= 0.50 and\
+                all_values_dict[symbol].get("epsGrowth5Years", -1) >= market_means["epsGrowth5Years"]*1.10 and\
+                all_values_dict[symbol].get("priceEarningsRatioTTM", -1) <=  15 and all_values_dict[symbol].get("currentRatioTTM", -1) >= 1.1:
+                final_scores[symbol] = built_dict[symbol]
+                final_scores[symbol]["safetyPrice"] = all_values_dict[symbol]["dcf"]*0.90
+        except Exception:
+            print(Exception)
     return final_scores
 
 
