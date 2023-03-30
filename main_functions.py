@@ -287,10 +287,10 @@ def build_stock_dicts(stock_dict, stock: str, market_name):
         else:
             break
     discounted_cash_flow_dict["currentDCF"] = stock_dict["currentDCF"]
-    dic_to_CSV(discounted_cash_flow_dict, f"{stock}discountedCashFlow", directory=f"{market_name}/{stock}", transpose=False, stock=True, stock_name=stock)
-    dic_to_CSV(balance_sheet_dict, f"{stock}balanceSheetStatements", directory=f"{market_name}/{stock}", transpose=False, stock=True, stock_name=stock)
-    dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics", directory=f"{market_name}/{stock}", transpose=False, stock=True, stock_name=stock)
-    dic_to_CSV(cash_flow_dict, f"{stock}cashFlowStatements", directory=f"{market_name}/{stock}", transpose=False, stock=True, stock_name=stock)
+    dic_to_CSV(discounted_cash_flow_dict, f"{stock}discountedCashFlow", directory=f"{market_name}/{stock}", transpose=False, stock=True)
+    dic_to_CSV(balance_sheet_dict, f"{stock}balanceSheetStatements", directory=f"{market_name}/{stock}", transpose=False, stock=True)
+    dic_to_CSV(key_metrics_dict, f"{stock}keyMetrics", directory=f"{market_name}/{stock}", transpose=False, stock=True)
+    dic_to_CSV(cash_flow_dict, f"{stock}cashFlowStatements", directory=f"{market_name}/{stock}", transpose=False, stock=True)
 
 def final_scores(all_values_dict, market_means, built_dict, discount_rate = 10, dict_conditions = None):
     final_scores = {}
@@ -531,7 +531,7 @@ def sorting_nested_dict_values(dic):
     sorted_dic = sorted(dic.items(), key=lambda value : value[1]["roe"])
     return sorted_dic
 
-def dic_to_CSV(dic, name: str, directory: str = None, transpose=False, stock=False, stock_name=None):
+def dic_to_CSV(dic, name: str, directory: str = None, transpose=False, stock=False, market_data=False, market_name : str ="marketClassifications"):
     current_directory = os.getcwd()
     path = f"{current_directory}/CSV"
     # orient=index means the keys of the dictionary will be rows, because before this line the dict keys are columns
@@ -545,11 +545,17 @@ def dic_to_CSV(dic, name: str, directory: str = None, transpose=False, stock=Fal
             os.mkdir(f"{path}/{directory}")
         if stock == True:
            df.to_csv(f"{path}/{directory}/{name}.csv") 
-        else:
-            df.to_csv(f"{path}/{directory}/{name}{directory}.csv")
+           return
+        elif market_data == True:
+            if not os.path.exists(f"{path}/{directory}/{market_name}"):
+                os.mkdir(f"{path}/{directory}/{market_name}")
+            df.to_csv(f"{path}/{directory}/{market_name}/{name}.csv")
+            return
+        df.to_csv(f"{path}/{directory}/{name}{directory}.csv")
         return
-    df.to_csv(f"{path}/{name}{directory}.csv", index=True, header=True)
-    return
+    else:
+        df.to_csv(f"{path}/{name}{directory}.csv", index=True, header=True)
+        return
 
 def df_to_csv(dataframe, name: str, directory: str = None, transpose=False):
     cwd = os.getcwd()
@@ -574,6 +580,7 @@ def estimated_time(size: int):
     print(f"Estimated time to retrieve datas : {hours} hours {minutes} minutes") 
     time.sleep(4.0)
 
+# Upload to an AWS S3 bucket
 def aws_s3_upload(market: str):
     cwd = os.getcwd()
     walk = os.walk(f"{cwd}/CSV/{market}")

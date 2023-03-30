@@ -118,10 +118,10 @@ def market_analysis(market_name):
     all_values, graham_classification, small_caps = mf.build_market_dicts(market_dict=dict_build, params=params, worth_interest=True, market_means=df_concat_means)
     final_scores = mf.final_scores(dict_build, df_concat_means, all_values, 10, None)
 
-    mf.dic_to_CSV(all_values, "allValues", f"{market_name}", False)
-    mf.dic_to_CSV(graham_classification, "graham_classification", f"{market_name}", False)
-    mf.dic_to_CSV(small_caps, "small_caps", f"{market_name}", False)
-    mf.dic_to_CSV(final_scores, "final_scores", f"{market_name}", False)
+    mf.dic_to_CSV(all_values, "allValues", f"{market_name}", False, market_data=True)
+    mf.dic_to_CSV(graham_classification, "graham_classification", f"{market_name}", False, market_data=True)
+    mf.dic_to_CSV(small_caps, "small_caps", f"{market_name}", False, market_data=True)
+    mf.dic_to_CSV(final_scores, "final_scores", f"{market_name}", False, market_data=True)
 
     mf.get_files(market=market_name)
 
