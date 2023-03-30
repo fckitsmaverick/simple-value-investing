@@ -3,11 +3,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from dotenv import load_dotenv
-from os import getenv
-from main_functions import get_files
+from os import getenv, remove
+from main_functions import zip_screeners
 from traceback import print_exc
 
-def send_email_report(market):
+def send_email_report():
     # Set the email addresses and password
     load_dotenv()
     sender_email = getenv("sender_email")
@@ -24,18 +24,18 @@ def send_email_report(market):
     message["Subject"] = "Daily Finance Report"
 
     # Add body to email
-    body = "Report for all the markets you asked."
+    body = "Screeners of the specified market, download the zip file or read in Google Sheets"
     message.attach(MIMEText(body, "plain"))
 
-    # Retrieve the files we want to send
-    files = get_files(market)
+    # Zip the directory of market screeners
+    zip_file = zip_screeners()
     
+    filename = "screeners.zip"
     # Add attachment to email
-    for file in files:
-        with open(file, "rb") as attachment:
-            part = MIMEApplication(attachment.read(), Name=file)
-            part['Content-Disposition'] = f'attachment; filename="{file}"'
-            message.attach(part)
+    with open(zip_file, "rb") as attachment:
+        part = MIMEApplication(attachment.read(), Name=zip_file)
+        part['Content-Disposition'] = f'attachment; filename="{filename}"'
+        message.attach(part)
 
     # Create SMTP session for sending the email
     session = smtplib.SMTP("smtp.gmail.com", 587)
@@ -49,6 +49,8 @@ def send_email_report(market):
         print("Email sent")
     except:
         print_exc()
+
+    remove(zip_file)
 
     # End the SMTP session
     session.quit()

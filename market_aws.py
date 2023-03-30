@@ -123,9 +123,6 @@ def market_analysis(market_name):
     mf.dic_to_CSV(small_caps, "small_caps", f"{market_name}", False, market_data=True)
     mf.dic_to_CSV(final_scores, "final_scores", f"{market_name}", False, market_data=True)
 
-    mf.get_files(market=market_name)
-
-    send_email_report(market=market_name)
     mf.aws_s3_upload(market=market_name)
 
 

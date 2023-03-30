@@ -7,6 +7,8 @@ import certifi
 import json
 import math, statistics, numpy as np, seaborn as sns, matplotlib.pyplot as plt
 import traceback
+import zipfile
+import shutil
 
 from scipy import stats
 
@@ -531,10 +533,10 @@ def sorting_nested_dict_values(dic):
     sorted_dic = sorted(dic.items(), key=lambda value : value[1]["roe"])
     return sorted_dic
 
-def dic_to_CSV(dic, name: str, directory: str = None, transpose=False, stock=False, market_data=False, market_name : str ="marketClassifications"):
+def dic_to_CSV(dic, name: str, directory: str = None, transpose=False, stock=False, market_data=False, market_name : str ="marketScreeners"):
     current_directory = os.getcwd()
     path = f"{current_directory}/CSV"
-    # orient=index means the keys of the dictionary will be rows, because before this line the dict keys are columns
+    # Orient=index means the keys of the dictionary will be rows, because before this line the dict keys are columns
     if not os.path.exists(f"{current_directory}/CSV"):
         os.mkdir(f"{current_directory}/CSV")
     df = pd.DataFrame.from_dict(dic, orient="index")
@@ -547,9 +549,11 @@ def dic_to_CSV(dic, name: str, directory: str = None, transpose=False, stock=Fal
            df.to_csv(f"{path}/{directory}/{name}.csv") 
            return
         elif market_data == True:
-            if not os.path.exists(f"{path}/{directory}/{market_name}"):
-                os.mkdir(f"{path}/{directory}/{market_name}")
-            df.to_csv(f"{path}/{directory}/{market_name}/{name}.csv")
+            if not os.path.exists(f"{path}/{market_name}"):
+                os.mkdir(f"{path}/{market_name}")
+            if not os.path.exists(f"{path}/{market_name}/{directory}"):
+                os.mkdir(f"{path}/{market_name}/{directory}")
+            df.to_csv(f"{path}/{market_name}/{directory}/{name}{directory}.csv")
             return
         df.to_csv(f"{path}/{directory}/{name}{directory}.csv")
         return
@@ -596,22 +600,21 @@ def aws_s3_upload(market: str):
 
 def get_files(market: str):
     cwd = os.getcwd()
-    walk = os.walk(f"{cwd}/CSV/{market}", )
+    # All the files we need to email must be in the directory marketScreener
+    walk = os.walk(f"{cwd}/CSV/marketScreeners")
     files_to_send = []
     for root, dirs, files in walk:
-        # only send the top directory files and break
-        # we don't want the files for specific stocks of the market
+        # Only send the top directory files and break
         if files:
             for file in files:
-                files_to_send.append(f"{cwd}/CSV/{market}/{file}")
+                files_to_send.append(f"{cwd}/CSV/marketScreeners/{file}")
         break
     return files_to_send
 
-# populate the classes market and stock
-# retrieve the datas for every year
-# main function should be available for every markets with data available
-# clean datas differently for plotting
-# once the general analysis is done make a function that give detailed information about specifics tickers
-# check the dates of the datas
-# check the price of the datas to see if the datas are not outdated
-# normalize the datas for a weighted average and then a score
+def zip_screeners():
+    cwd = os.getcwd() 
+    screeners_path = f"{cwd}/CSV/marketScreeners"
+    name = f"{cwd}/screeners"
+    zip_file = shutil.make_archive(name, 'zip', screeners_path)
+    print("zip saved") 
+    return zip_file 

@@ -12,9 +12,15 @@ if __name__ == "__main__":
     
     time_start = time.perf_counter()
     markets = ["tse", "nyse", "hkse", "lse", "nasdaq", "oss117"]
-    files = []
+    # Make a market analysis for each market in the list
     for i in range(0, len(markets)):
         market_aws.market_analysis(markets[i])
+    
+    try:
+        send_email_report()
+    except:
+        print("Email fail")
+        
     time_end = time.perf_counter()
 
     print(f"Timer in seconds : {time_end - time_start}")
