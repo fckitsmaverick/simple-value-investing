@@ -12,6 +12,7 @@ import main_functions as mf
 import classes as cls
 import main_input as inp
 import datas_retrieving
+from mail import send_email_report
 
 
 def market_analysis(market_name):
@@ -57,7 +58,7 @@ def market_analysis(market_name):
 }
 
 
-    limit = 1000000
+    limit = 5
     try:
         tickers = market_dict[market_name](market_name) 
     except TypeError:
@@ -122,7 +123,11 @@ def market_analysis(market_name):
     mf.dic_to_CSV(small_caps, "small_caps", f"{market_name}", False)
     mf.dic_to_CSV(final_scores, "final_scores", f"{market_name}", False)
 
+    mf.get_files(market=market_name)
+
+    send_email_report(market=market_name)
     mf.aws_s3_upload(market=market_name)
+
 
     time_end = time.perf_counter()
 

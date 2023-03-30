@@ -6,6 +6,7 @@ import time
 import certifi
 import json
 import math, statistics, numpy as np, seaborn as sns, matplotlib.pyplot as plt
+import traceback
 
 from scipy import stats
 
@@ -105,6 +106,18 @@ def stock_api_call(symbol):
             print(f"{count} attempts, can't find this ticker, trying again")
     return balanceSheetStatement, keyMetrics, cashFlowStatements, discountedCashFlow
 
+def bulk_api_call(market):
+    global timer_function_start
+    timer_function_start = time.perf_counter()
+    count = 0
+    for attemps in range(4):
+        # check for errors
+        try:
+            # add enterprise value / ebitda and enterprise value / free cash flow both are in keyMetricsTTM
+            bulk_key_metrics = get_jsonparsed_data(f"https://financialmodelingprep.com/api/v4/income-statement-bulk?year=2020&period=annual&apikey={apikey}")
+            print(bulk_key_metrics)
+        except Exception:
+            traceback.print_exc()
 
 ####################################################################################################################################################
 
@@ -289,7 +302,8 @@ def final_scores(all_values_dict, market_means, built_dict, discount_rate = 10, 
                 final_scores[symbol] = built_dict[symbol]
                 final_scores[symbol]["safetyPrice"] = all_values_dict[symbol]["dcf"]*0.90
         except Exception:
-            print(Exception)
+            traceback.print_exc()
+            print(symbol)
     return final_scores
 
 
@@ -562,13 +576,29 @@ def estimated_time(size: int):
 
 def aws_s3_upload(market: str):
     cwd = os.getcwd()
-    files = os.listdir(path=f"{cwd}/CSV/{market}")
-    print(files)
-    for file in files:
-        try:
-            os.system(f"aws s3 cp {cwd}/CSV/{market}/{file} s3://{bucket}")
-        except:
-            print("Failed to updload")
+    walk = os.walk(f"{cwd}/CSV/{market}")
+    for root, dirs, files in walk:
+        # only send the top directory files and break
+        if files:
+            for file in files:
+                try:
+                    os.system(f"aws s3 cp {cwd}/CSV/{market}/{file} s3://{bucket}")
+                except:
+                    print("Failed to updload")
+        break
+
+def get_files(market: str):
+    cwd = os.getcwd()
+    walk = os.walk(f"{cwd}/CSV/{market}", )
+    files_to_send = []
+    for root, dirs, files in walk:
+        # only send the top directory files and break
+        # we don't want the files for specific stocks of the market
+        if files:
+            for file in files:
+                files_to_send.append(f"{cwd}/CSV/{market}/{file}")
+        break
+    return files_to_send
 
 # populate the classes market and stock
 # retrieve the datas for every year

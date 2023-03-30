@@ -1,21 +1,18 @@
 import os
-import pandas as pd
-from dotenv import load_dotenv
-from pathlib import Path
 import time 
 import sys
-import numpy as np, seaborn as sns
-import matplotlib.pyplot as plt
 
 import main_functions as mf
 import classes as cls
 import main_input as inp
 import market_aws
+from mail import send_email_report
 
 if __name__ == "__main__":
     
     time_start = time.perf_counter()
     markets = ["tse", "nyse", "hkse", "lse", "nasdaq", "oss117"]
+    files = []
     for i in range(0, len(markets)):
         market_aws.market_analysis(markets[i])
     time_end = time.perf_counter()
