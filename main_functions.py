@@ -483,9 +483,13 @@ def graham_number_percentage(key_metrics_dict, price):
         except:
             key_metrics_dict[symbol]["grahamNumberPercentageTTM"] = -1
         if graham != None and curr_price != None: 
+            if graham == 0 or curr_price == 0:
+                key_metrics_dict[symbol]["grahamNumberPercentageTTM"] = -1
+                continue
             curr = (graham/curr_price)*100
             if curr > 100: key_metrics_dict[symbol]["grahamNumberPercentageTTM"] = curr
             else: key_metrics_dict[symbol]["grahamNumberPercentageTTM"] = -1
+            
 
 def dcf_percentage(dcf_dict):
     for symbol in dcf_dict:

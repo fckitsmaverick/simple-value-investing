@@ -11,7 +11,7 @@ from mail import send_email_report
 if __name__ == "__main__":
     
     time_start = time.perf_counter()
-    markets = ["tse", "nyse", "hkse", "lse", "nasdaq", "oss117"]
+    markets = ["nyse", "lse", "nasdaq", "oss117"]
     # Make a market analysis for each market in the list
     for i in range(0, len(markets)):
         market_aws.market_analysis(markets[i])
